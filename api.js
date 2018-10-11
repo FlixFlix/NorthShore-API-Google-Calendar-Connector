@@ -210,6 +210,12 @@ function createSidebarControls() {
 		$signoutButton = $( '<button id="signout_button" style="width: 100%; display: none;">Log out Google Calendar</button>' );
 		$sidebar.append( $signoutButton );
 	}
+	if ( $( '#resync_button' ).length ) {
+		$resyncButton = $( "#resync_button" );
+	} else {
+		$resyncButton = $( '<button id="resync_button" style="width: 100%; display: none;">Resync with shown period</button>' );
+		$sidebar.append( $resyncButton );
+	}
 	if ( $( '#status_content' ).length ) {
 		$statusContent = $( "#status_content" );
 	} else {
