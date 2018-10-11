@@ -11,7 +11,7 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 // included, separated by spaces.
 var SCOPES = "https://www.googleapis.com/auth/calendar";
 
-var $authorizeButton, $signoutButton, $table;
+var $authorizeButton, $signoutButton, $scheduleTable, $sidebar;
 
 function syncEvents( workDates, existingWorkEvents ) {
 	// console.log( dates ); 
@@ -93,8 +93,8 @@ function sendToCalendar( event ) {
 }
 
 function parseScheduleTable() {
-	var $dates = $( $table.find( 'tbody > tr' ).eq( 1 ).find( '.cellContents' ) );
-	var $hours = $( $table.find( 'tbody > tr' ).eq( 2 ).find( '.cellContents' ) );
+	var $dates = $( $scheduleTable.find( 'tbody > tr' ).eq( 1 ).find( '.cellContents' ) );
+	var $hours = $( $scheduleTable.find( 'tbody > tr' ).eq( 2 ).find( '.cellContents' ) );
 	var workdays = [];
 	var lastMonthInSet = 1;
 	var today = new Date();
@@ -197,30 +197,44 @@ function handleClientLoad() {
 	gapi.load( 'client:auth2', initClient );
 }
 
+function createSidebarControls() {
+	if ( $( '#authorize_button' ).length ) {
+		$authorizeButton = $( "#authorize_button" );
+	} else {
+		$authorizeButton = $( '<button id="authorize_button" style="cursor: pointer; color: white; font-weight:bold; font-size: 16px; border-radius: 6px; background: #5cb85c; border: none; padding: 10px; width: 100%; display: none;">Authorize<br>Google Calendar</button>' );
+		$sidebar.append( $authorizeButton );
+	}
+	if ( $( '#signout_button' ).length ) {
+		$signoutButton = $( "#signout_button" );
+	} else {
+		$signoutButton = $( '<button id="signout_button" style="width: 100%; display: none;">Log out Google Calendar</button>' );
+		$sidebar.append( $signoutButton );
+	}
+	if ( $( '#status_content' ).length ) {
+		$statusContent = $( "#status_content" );
+	} else {
+		$statusContent = $( '<pre id="status_content" style="color: black; font-weight: normal; font-size: 11px; line-height: 1.5;"></pre>' );
+		$sidebar.append( $statusContent );
+	}
+}
+
 // $( window ).on( 'load', function() {
 	$.getScript( 'https://apis.google.com/js/api.js' );
 	// document.onkeypress = function( e ) {
 	// 	e = e || window.event;
 	var interval = setInterval( function() {
 		var $iframe = $( 'iframe#Main' );
-		if ( $iframe.length ) {
-			var $contents = $iframe.contents();
-			$table = $contents.find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
-			if ( $table.length ) {
+		$sidebar = $( '#west_side_div' );
+		if ( $iframe.length && $sidebar.length ) {
+			$scheduleTable = $iframe.contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
+			var $sidebarWidgets = $sidebar.find( '.rcard' );
+			if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
 				clearInterval( interval );
+				createSidebarControls();
 				handleClientLoad();
-				// Create GCal buttons
-				var $sidebar = $( '#west_side_div' );
-				if ( $sidebar.length ) {
-					$authorizeButton = $( '<button id="authorize_button" style="width: 100%; display: none;">Authorize Google Calendar</button>' );
-					$sidebar.append( $authorizeButton );
-					$signoutButton = $( '<button id="signout_button" style="width: 100%; display: none;">Deauthorize Calendar</button>' );
-					$sidebar.append( $signoutButton );
-					$sidebar.append( '<pre style="color: black; font-weight: normal; font-size: 11px" id="content"></pre>' );
-				}
 			}
 		}
-
 	}, 1000 );
 	// };
 // } );
+
