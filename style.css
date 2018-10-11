@@ -1,3 +1,21 @@
+/* Overrides */
+#wulc, #wtc, #wurc, #ctc {
+	display: none !important;
+}
+
+.rcard > img:first-child, .rcard > img:nth-child(2) {
+	display: none;
+}
+
+.rcard > div.title {
+	width: calc(100% - 30px) !important;
+	padding: 4px 5px 0;
+	height: 16px;
+}
+
+#west_side_div {
+	overflow-y: auto;
+}
 
 /* Animations */
 @keyframes bounceIn {
