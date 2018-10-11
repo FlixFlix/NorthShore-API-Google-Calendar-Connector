@@ -60,11 +60,11 @@ function syncEvents( workDates, existingWorkEvents ) {
 				'colorId': 7
 			};
 			eventsToAdd.push( newEventObject );
-			// sendToCalendar( eventJson );
 		}
 	} );
+
 	if ( eventsToAdd.length ) sendBatchToCalendar( eventsToAdd );
-	// TODO True syncing; i.e. remove events that are in GCal but not in NorthShore. Quite rare; not very important.
+	// TODO True syncing; i.e. remove events that are in GCal but not in NorthShore. Quite rare; not very important. Also relatively complex due to the possibility of user changing periods and past events in particular.
 }
 
 function sendBatchToCalendar( events ) {
@@ -218,23 +218,18 @@ function createSidebarControls() {
 	}
 }
 
-// $( window ).on( 'load', function() {
-	$.getScript( 'https://apis.google.com/js/api.js' );
-	// document.onkeypress = function( e ) {
-	// 	e = e || window.event;
-	var interval = setInterval( function() {
-		var $iframe = $( 'iframe#Main' );
-		$sidebar = $( '#west_side_div' );
-		if ( $iframe.length && $sidebar.length ) {
-			$scheduleTable = $iframe.contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
-			var $sidebarWidgets = $sidebar.find( '.rcard' );
-			if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
-				clearInterval( interval );
-				createSidebarControls();
-				handleClientLoad();
-			}
+$.getScript( 'https://apis.google.com/js/api.js' );
+var interval = setInterval( function() {
+	var $iframe = $( 'iframe#Main' );
+	$sidebar = $( '#west_side_div' );
+	if ( $iframe.length && $sidebar.length ) {
+		$scheduleTable = $iframe.contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
+		var $sidebarWidgets = $sidebar.find( '.rcard' );
+		if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
+			clearInterval( interval );
+			createSidebarControls();
+			handleClientLoad();
 		}
-	}, 1000 );
-	// };
-// } );
+	}
+}, 1000 );
 
