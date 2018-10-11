@@ -57,7 +57,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 					'useDefault': false,
 					'overrides': []
 				},
-				'colorId': 9
+				'colorId': 7
 			};
 			eventsToAdd.push( newEventObject );
 			// sendToCalendar( eventJson );
