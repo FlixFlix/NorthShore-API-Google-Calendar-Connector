@@ -235,6 +235,11 @@ var interval = setInterval( function() {
 			clearInterval( interval );
 			createSidebarControls();
 			handleClientLoad();
+			setTimeout(function(){
+				$('#Bookmarks_img').click();
+				$('img[id="Report Favorites_img"]').click();
+				$('img[id="Employee Sections_img"]').click();
+			}, 1000);
 		}
 	}
 }, 1000 );
