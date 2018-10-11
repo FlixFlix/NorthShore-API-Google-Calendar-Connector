@@ -161,10 +161,11 @@ function handleSignoutClick( event ) {
 	gapi.auth2.getAuthInstance().signOut();
 }
 
-function log( message ) {
-	var pre = document.getElementById( 'content' );
-	var textContent = document.createTextNode( message + '\n' );
-	pre.appendChild( textContent );
+function log( message, title ) {
+	var $pre = $( '#status_content' );
+	var $text = $( '<div>'+message + '</div>' );
+	$pre.append( $text );
+	if ( title !== undefined ) $pre.find( 'div:last-child' ).attr( 'title', title );
 }
 
 function getExistingWorkdays() {
