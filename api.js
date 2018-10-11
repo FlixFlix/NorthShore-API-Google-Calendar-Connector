@@ -13,6 +13,14 @@ var SCOPES = "https://www.googleapis.com/auth/calendar";
 
 var $authorizeButton, $signoutButton, $scheduleTable, $sidebar;
 
+function injectStyles() {
+	var s = document.createElement( 'link' );
+	s.setAttribute( 'href', 'https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) );
+	s.setAttribute( 'rel', 'stylesheet' );
+	s.setAttribute( 'type', 'text/css' );
+	document.body.appendChild( s );
+}
+
 function syncEvents( workDates, existingWorkEvents ) {
 	// console.log( dates ); 
 
@@ -165,7 +173,7 @@ function handleSignoutClick( event ) {
 
 function log( message, title ) {
 	var $pre = $( '#status_content' );
-	var $text = $( '<div>'+message + '</div>' );
+	var $text = $( '<div class="bounceIn">'+message + '</div>' );
 	$pre.append( $text );
 	if ( title !== undefined ) $pre.find( 'div:last-child' ).attr( 'title', title );
 }
@@ -233,6 +241,7 @@ var interval = setInterval( function() {
 		var $sidebarWidgets = $sidebar.find( '.rcard' );
 		if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
 			clearInterval( interval );
+			injectStyles();
 			createSidebarControls();
 			handleClientLoad();
 			setTimeout(function(){
