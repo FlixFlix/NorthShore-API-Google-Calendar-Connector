@@ -244,12 +244,9 @@ var interval = setInterval( function() {
 			injectStyles();
 			createSidebarControls();
 			handleClientLoad();
-			setTimeout(function(){
-				$('#Bookmarks_img').click();
-				$('img[id="Report Favorites_img"]').click();
-				$('img[id="Employee Sections_img"]').click();
-			}, 1000);
+			$('div[id="Employee Sections"], div#Bookmarks, div[id="Report Favorites"]').appendTo('#west_side_div');
+
 		}
 	}
-}, 1000 );
+}, 2000 );
 
