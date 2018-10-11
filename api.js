@@ -19,11 +19,11 @@ function injectStyles() {
 	s.setAttribute( 'rel', 'stylesheet' );
 	s.setAttribute( 'type', 'text/css' );
 	document.body.appendChild( s );
+	console.log( 'Injecting custom stylesheet.' );
 }
 
 function syncEvents( workDates, existingWorkEvents ) {
-	// console.log( dates ); 
-
+	console.log( 'Comparing existing events with schedule table' );
 	var crossCheckDates = [];
 	var eventsToAdd = [];
 	// Build date-only array
@@ -40,7 +40,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 		crossCheckDates.push( eventDate.toLocaleDateString( "en-US" ) );
 		}
 	);
-	log( crossCheckDates.length + " workdays already in calendar", crossCheckDates );
+	log( crossCheckDates.length + " days already in calendar", crossCheckDates );
 	workDates.forEach( function( date ) {
 		let startTime = new Date( date.year, date.month - 1, date.day );
 		startTime.setHours( 7 );
@@ -71,11 +71,17 @@ function syncEvents( workDates, existingWorkEvents ) {
 		}
 	} );
 
-	if ( eventsToAdd.length ) sendBatchToCalendar( eventsToAdd );
+	if ( eventsToAdd.length ) {
+		sendBatchToCalendar( eventsToAdd );
+	} else {
+		console.log( 'No updates needed, calendar is in sync' );
+		log( "Calendar synced, no changes" );
+	}
 	// TODO True syncing; i.e. remove events that are in GCal but not in NorthShore. Quite rare; not very important. Also relatively complex due to the possibility of user changing periods and past events in particular.
 }
 
 function sendBatchToCalendar( events ) {
+	console.log( 'Sending ' + events.length + ' events to calendar' );
 	var batch = gapi.client.newBatch();
 	var title = '';
 	events.forEach( function( event ) {
@@ -86,7 +92,8 @@ function sendBatchToCalendar( events ) {
 		} ) );
 	} );
 	batch.then( function() {
-		log( events.length + " new workdays added", title );
+		console.log( events.length + ' events sent' );
+		log( events.length + " new days added", title );
 	} );
 }
 
@@ -136,12 +143,15 @@ function handleClientLoad() {
 
 // Initializes the API client library and sets up sign-in state listeners.
 function initClient( el ) {
+	console.log( 'Initializing API client' );
 	gapi.client.init( {
 		apiKey: API_KEY,
 		clientId: CLIENT_ID,
 		discoveryDocs: DISCOVERY_DOCS,
 		scope: SCOPES
 	} ).then( function() {
+		console.log( 'API client initialized' );
+
 		// Listen for sign-in state changes.
 		gapi.auth2.getAuthInstance().isSignedIn.listen( updateSigninStatus );
 		// Handle the initial sign-in state.
@@ -153,11 +163,14 @@ function initClient( el ) {
 
 // Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
 function updateSigninStatus( isSignedIn ) {
+	console.log( 'Checking authorization status' );
 	if ( isSignedIn ) {
+		console.log( 'Client is authorized' )
 		$authorizeButton.hide();
 		$signoutButton.show();
 		getExistingWorkdays();
 	} else {
+		console.log( 'Requesting authorization' );
 		$authorizeButton.show();
 		$signoutButton.hide();
 	}
@@ -179,6 +192,7 @@ function log( message, title ) {
 }
 
 function getExistingWorkdays() {
+	console.log( 'Retrieving existing calendar entries' );
 	gapi.client.calendar.events.list( {
 		'calendarId': 'primary',
 		'timeMin': (new Date()).toISOString(),
@@ -187,6 +201,7 @@ function getExistingWorkdays() {
 		'maxResults': 100,
 		'orderBy': 'startTime'
 	} ).then( function( response ) {
+		console.log( 'Entries retrieved' );
 		var events = response.result.items;
 		var existingWorkdays = [];
 		if ( events.length > 0 ) {
@@ -202,10 +217,12 @@ function getExistingWorkdays() {
 }
 
 function handleClientLoad() {
+	console.log( 'Loading Google Calendar API' );
 	gapi.load( 'client:auth2', initClient );
 }
 
 function createSidebarControls() {
+	console.log( 'Creating sidebar controls' );
 	if ( $( '#authorize_button' ).length ) {
 		$authorizeButton = $( "#authorize_button" );
 	} else {
@@ -233,6 +250,7 @@ function createSidebarControls() {
 }
 
 $.getScript( 'https://apis.google.com/js/api.js' );
+console.log( 'Google Calendar NorthShore API Connector v0.1 running' );
 var interval = setInterval( function() {
 	var $iframe = $( 'iframe#Main' );
 	$sidebar = $( '#west_side_div' );
@@ -240,6 +258,7 @@ var interval = setInterval( function() {
 		$scheduleTable = $iframe.contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
 		var $sidebarWidgets = $sidebar.find( '.rcard' );
 		if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
+			console.log( 'All DOM elements loaded' );
 			clearInterval( interval );
 			injectStyles();
 			createSidebarControls();
