@@ -32,7 +32,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 		crossCheckDates.push( eventDate.toLocaleDateString( "en-US" ) );
 		}
 	);
-	log( crossCheckDates.length + " workdays already in calendar" );
+	log( crossCheckDates.length + " workdays already in calendar", crossCheckDates );
 	workDates.forEach( function( date ) {
 		let startTime = new Date( date.year, date.month - 1, date.day );
 		startTime.setHours( 7 );
@@ -69,14 +69,16 @@ function syncEvents( workDates, existingWorkEvents ) {
 
 function sendBatchToCalendar( events ) {
 	var batch = gapi.client.newBatch();
+	var title = '';
 	events.forEach( function( event ) {
+		title += event.start.date + ', ';
 		batch.add( gapi.client.calendar.events.insert( {
 			'calendarId': 'primary',
 			'resource': event
 		} ) );
 	} );
 	batch.then( function() {
-		log( events.length + " new workdays added" )
+		log( events.length + " new workdays added", title );
 	} );
 }
 
