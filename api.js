@@ -226,14 +226,14 @@ function createSidebarControls() {
 	if ( $( '#authorize_button' ).length ) {
 		$authorizeButton = $( "#authorize_button" );
 	} else {
-		$authorizeButton = $( '<button id="authorize_button" style="cursor: pointer; color: white; font-weight:bold; font-size: 16px; border-radius: 6px; background: #5cb85c; border: none; padding: 10px; width: 100%; display: none;">Authorize<br>Google Calendar</button>' );
-		$sidebar.append( $authorizeButton );
+		$authorizeButton = $( '<button class="material-button-raised" id="authorize_button" style="display: none;">Authorize<br>Google Calendar</button>' );
+		$sidebar.prepend( $authorizeButton );
 	}
-	if ( $( '#signout_button' ).length ) {
-		$signoutButton = $( "#signout_button" );
+	if ( $( '#status_content' ).length ) {
+		$statusContent = $( "#status_content" );
 	} else {
-		$signoutButton = $( '<button id="signout_button" style="width: 100%; display: none;">Log out Google Calendar</button>' );
-		$sidebar.append( $signoutButton );
+		$statusContent = $( '<pre id="status_content" style="font-family: sans-serif; font-size: 14px; color: #6200ee; font-weight: normal; font-size: 13px; line-height: 1.5;"></pre>' );
+		$sidebar.append( $statusContent );
 	}
 	if ( $( '#resync_button' ).length ) {
 		$resyncButton = $( "#resync_button" );
@@ -241,11 +241,11 @@ function createSidebarControls() {
 		$resyncButton = $( '<button id="resync_button" style="width: 100%; display: none;">Resync with shown period</button>' );
 		$sidebar.append( $resyncButton );
 	}
-	if ( $( '#status_content' ).length ) {
-		$statusContent = $( "#status_content" );
+	if ( $( '#signout_button' ).length ) {
+		$signoutButton = $( "#signout_button" );
 	} else {
-		$statusContent = $( '<pre id="status_content" style="color: black; font-weight: normal; font-size: 11px; line-height: 1.5;"></pre>' );
-		$sidebar.append( $statusContent );
+		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="margin-top: 1px; display: none;">Deauthorize</button>' );
+		$sidebar.append( $signoutButton );
 	}
 }
 
@@ -264,7 +264,8 @@ var interval = setInterval( function() {
 			createSidebarControls();
 			handleClientLoad();
 			$('div[id="Employee Sections"], div#Bookmarks, div[id="Report Favorites"]').appendTo('#west_side_div');
-
+			$( '#ctl00_formContentPlaceHolder_employeeScheduleHeaderSeparatorDiv' ).remove();
+			$( 'table#ctl00_formContentPlaceHolder_employeeScheduleOuterTable > tbody > tr:first-child ' ).remove();
 		}
 	}
 }, 2000 );
