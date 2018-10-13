@@ -23,32 +23,33 @@ function injectStyles() {
 }
 
 function syncEvents( workDates, existingWorkEvents ) {
-	console.log( 'Comparing existing events with schedule table' );
-	var crossCheckDates = [];
+	// console.log( 'Comparing existing events with schedule table' );
+	// var crossCheckDates = [];
 	var eventsToAdd = [];
 	// Build date-only array
-	existingWorkEvents.forEach( function( event ) {
-		var when, eventDate;
-		if ( event.start.date ) {
-			when = event.start.date;
-			eventDate = new Date( when );
-			eventDate.setTime( eventDate.getTime() + eventDate.getTimezoneOffset() * 60 * 1000 );
-		} else {
-			when = event.start.dateTime;
-			eventDate = new Date( when );
-		}
-		crossCheckDates.push( eventDate.toLocaleDateString( "en-US" ) );
-		}
-	);
-	log( crossCheckDates.length + " days already in calendar", crossCheckDates );
-	workDates.forEach( function( date ) {
+	/*
+		existingWorkEvents.forEach( function( event ) {
+			var when, eventDate;
+			if ( event.start.date ) {
+				when = event.start.date;
+				eventDate = new Date( when );
+				eventDate.setTime( eventDate.getTime() + eventDate.getTimezoneOffset() * 60 * 1000 );
+			} else {
+				when = event.start.dateTime;
+				eventDate = new Date( when );
+			}
+			crossCheckDates.push( eventDate.toLocaleDateString( "en-US" ) );
+			}
+		);
+	*/
+	// log( crossCheckDates.length + " days already in calendar", crossCheckDates );
 		let startTime = new Date( date.year, date.month - 1, date.day );
 		startTime.setHours( 7 );
 		startTime.setMinutes( 0 );
 		let endTime = new Date( date.year, date.month - 1, date.day );
 		endTime.setHours( 19 );
 		endTime.setMinutes( 30 );
-		if ( !crossCheckDates.includes( startTime.toLocaleDateString( "en-US" ) ) ) {
+		// Check for consecutive days and merge calendar entries
 			var newEventObject = {
 				'summary': 'WORK',
 				'location': '777 Park Avenue West, Highland Park, IL',
@@ -203,12 +204,29 @@ function getExistingWorkdays() {
 	} ).then( function( response ) {
 		console.log( 'Entries retrieved' );
 		var events = response.result.items;
-		var existingWorkdays = [];
+		// var existingWorkdays = [];
 		if ( events.length > 0 ) {
 			for ( i = 0; i < events.length; i++ ) {
 				var event = events[i];
 				if ( event.summary === "WORK" ) {
-					existingWorkdays.push( event );
+					function deleteEvent( event_id ) {
+						gapi.client.load( 'calendar', 'v3', function() {
+							var request = gapi.client.calendar.events.delete( {
+								'calendarId': 'primary',
+								'eventId': event_id
+							} );
+							request.execute( function( response ) {
+								if ( response.error || response == false ) {
+									console.log( 'Error' );
+								}
+								else {
+									console.log( 'Successfully deleted ' + event.start.date + ' (including any immediately following days)');
+								}
+							} );
+						} );
+					}
+					deleteEvent( event.id );
+					// existingWorkdays.push( event );
 				}
 			}
 		}
