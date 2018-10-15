@@ -14,12 +14,11 @@ var SCOPES = "https://www.googleapis.com/auth/calendar";
 var $authorizeButton, $signoutButton, $scheduleTable, $sidebar;
 
 function injectStyles() {
-	var s = document.createElement( 'link' );
-	s.setAttribute( 'href', 'https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) );
-	s.setAttribute( 'rel', 'stylesheet' );
-	s.setAttribute( 'type', 'text/css' );
-	document.body.appendChild( s );
-	console.log( 'Injecting custom stylesheet.' );
+	console.log( 'Injecting custom stylesheets' );
+	var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
+	$( 'iframe#Nav' ).contents().find( 'body' ).append( sheet );
+	$( 'iframe#Main' ).contents().find( 'body' ).append( sheet );
+	$( 'body' ).append( sheet );
 }
 
 function syncEvents( workDates, existingWorkEvents ) {

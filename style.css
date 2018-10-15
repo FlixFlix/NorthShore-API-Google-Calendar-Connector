@@ -13,12 +13,41 @@
 	height: 16px;
 }
 
-#west_side_div {
-	overflow-y: auto;
-}
-
 TABLE.selfSchedule TH, TABLE.selfSchedule TD {
 	border-color: #aaa !important;
+}
+
+#ctl00_formContentPlaceHolder_orgUnitScheduleHeaderSeparatorTable > tbody > .mh.noBottom,
+#ctl00_formContentPlaceHolder_orgUnitScheduleSeparatorTable > tbody > .mh.noBottom {
+	display: none;
+}
+#ctl00_formContentPlaceHolder_orgUnitScheduleHeaderSeparatorTable .cellContents {
+	color: transparent;
+}
+
+#ctl00_formContentPlaceHolder_employeeScheduleDivctl00_formContentPlaceHolder_employeeScheduleDiv,
+#ctl00_formContentPlaceHolder_scheduleExceptionTableContainer,
+#ctl00_formContentPlaceHolder_employeeScheduleDiv,
+#mainContentDiv,
+#west_side_div
+{
+	overflow-y: auto !important;
+}
+#ctl00_formContentPlaceHolder_scheduleExceptionTableContainer,
+ctl00_formContentPlaceHolder_scheduleExceptionTableContainer + table {
+	overflow-y: scroll;
+}
+#ctl00_formContentPlaceHolder_scrollDiv {
+	overflow-x: auto;
+	/*display: none;*/
+}
+
+iframe#Main html {
+	overflow: auto !important;
+	height: auto !important;
+}
+#mainContentDiv {
+	/*overflow-x: hidden;*/
 }
 
 .selfScheduleOuter {
