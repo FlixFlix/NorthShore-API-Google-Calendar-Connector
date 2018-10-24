@@ -33,6 +33,12 @@ TABLE.selfSchedule TH, TABLE.selfSchedule TD {
 {
 	overflow-y: auto !important;
 }
+
+/*Date range*/
+#ctl00_formContentPlaceHolder_dateRangeLabel {
+	line-height: 20px;
+}
+
 #ctl00_formContentPlaceHolder_scheduleExceptionTableContainer,
 ctl00_formContentPlaceHolder_scheduleExceptionTableContainer + table {
 	overflow-y: scroll;
