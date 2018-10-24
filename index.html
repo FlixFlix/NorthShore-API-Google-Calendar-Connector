@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NorthShore Connector Bookmarklet</title>
+    <style>
+        html, body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: sans-serif;
+            color: white;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        body {
+            background-image: url('bg-blue.jpg');
+            background-size: cover;
+            background-position: center center;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .box {
+            margin: 20px;
+            display: inline-block;
+            padding: 20px 30px;
+
+            border-radius: 5px;
+            background-color: deepskyblue;
+            color: white;
+            font-size: 20px;
+            cursor: grab;
+            text-decoration: none;
+
+        }
+
+        .box:active {
+            cursor: grabbing;
+        }
+
+        .container {
+
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    Drag this button into your browser's bookmarks bar.<br>
+    You can always rename it later, e.g. "NorthShore Sync" or whatever.<br>
+    Default name is now NS→GCal for brevity.<br>
+    <div class="box-container">
+        <a id="bookmarklet" class="box"
+           href='javascript:(function()%7Bfunction%20callback()%7Balert("")%7Dvar%20s%3Ddocument.createElement(%22script%22)%3Bs.src%3D%22https%3A%2F%2Firedesigned.com%2Fstuff%2Fnorthshore%2Fapi.js%22%3Bif(s.addEventListener)%7Bs.addEventListener(%22load%22%2Ccallback%2Cfalse)%7Delse%20if(s.readyState)%7Bs.onreadystatechange%3Dcallback%7Ddocument.body.appendChild(s)%3B%7D)()'>NS→GCal</a>
+    </div>
+    To use, click this new bookmark when viewing your schedule.<br>
+    Wait for the blue button to appear in the left sidebar and click it.<br>
+    A popup window will appear to authorize your Google Calendar account. You only have to do this once.<br>
+    To sync your workdays anytime, click the bookmarklet when you access your schedule again.<br><br>
+    <a class="github-button" href="https://github.com/FlixFlix/NorthShore-API-Google-Calendar-Connector"
+       data-size="large" aria-label="View FlixFlix/NorthShore-API-Google-Calendar-Connector on GitHub">View on
+        github</a>
+    <a alt="My Bookmarklet" href="javascript:(function(){console.log('xxx');})();">Drag to Bookmarks Bar to save this Bookmarklet</a>
+    <br>You can share this with the following link:<br>
+    <pre>http://bit.ly/northshoreapicalendar</pre>
+</div>
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+</body>
+</html>
