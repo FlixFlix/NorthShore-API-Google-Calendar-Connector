@@ -13,8 +13,12 @@ var SCOPES = "https://www.googleapis.com/auth/calendar";
 
 var $authorizeButton, $signoutButton, $scheduleTable, $sidebar;
 
+var originalLog = console.log;
+console.log = function( lineNumber, message ) {
+	if ( DEBUG_ON ) originalLog( 'Line ' + lineNumber + ': ' + message );
+}
 function injectStyles() {
-	console.log( 'Injecting custom stylesheets' );
+	console.log( ln(), 'Injecting custom stylesheets' );
 	var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
 	$( 'iframe#Nav' ).contents().find( 'body' ).append( sheet );
 	$( 'iframe#Main' ).contents().find( 'body' ).append( sheet );
@@ -22,7 +26,7 @@ function injectStyles() {
 }
 
 function syncEvents( workDates, existingWorkEvents ) {
-	// console.log( 'Comparing existing events with schedule table' );
+	// console.log( ln(), 'Comparing existing events with schedule table' );
 	// var crossCheckDates = [];
 	var eventsToAdd = [];
 	// Build date-only array
@@ -74,14 +78,14 @@ function syncEvents( workDates, existingWorkEvents ) {
 	if ( eventsToAdd.length ) {
 		sendBatchToCalendar( eventsToAdd );
 	} else {
-		console.log( 'No updates needed, calendar is in sync' );
+		console.log( ln(), 'No updates needed, calendar is in sync' );
 		log( "Calendar synced, no changes" );
 	}
 	// TODO True syncing; i.e. remove events that are in GCal but not in NorthShore. Quite rare; not very important. Also relatively complex due to the possibility of user changing periods and past events in particular.
 }
 
 function sendBatchToCalendar( events ) {
-	console.log( 'Sending ' + events.length + ' events to calendar' );
+	console.log( ln(), 'Sending ' + events.length + ' events to calendar' );
 	var batch = gapi.client.newBatch();
 	var title = '';
 	events.forEach( function( event ) {
@@ -92,13 +96,13 @@ function sendBatchToCalendar( events ) {
 		} ) );
 	} );
 	batch.then( function() {
-		console.log( events.length + ' events sent' );
+		console.log( ln(), events.length + ' events sent' );
 		log( events.length + " new days added", title );
 	} );
 }
 
 function sendToCalendar( event ) {
-	console.log( event );
+	console.log( ln(), event );
 	var request = gapi.client.calendar.events.insert( {
 		'calendarId': 'primary',
 		'resource': event
@@ -143,14 +147,14 @@ function handleClientLoad() {
 
 // Initializes the API client library and sets up sign-in state listeners.
 function initClient( el ) {
-	console.log( 'Initializing API client' );
+	console.log( ln(), 'Initializing API client' );
 	gapi.client.init( {
 		apiKey: API_KEY,
 		clientId: CLIENT_ID,
 		discoveryDocs: DISCOVERY_DOCS,
 		scope: SCOPES
 	} ).then( function() {
-		console.log( 'API client initialized' );
+		console.log( ln(), 'API client initialized' );
 
 		// Listen for sign-in state changes.
 		gapi.auth2.getAuthInstance().isSignedIn.listen( updateSigninStatus );
@@ -163,14 +167,14 @@ function initClient( el ) {
 
 // Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
 function updateSigninStatus( isSignedIn ) {
-	console.log( 'Checking authorization status' );
+	console.log( ln(), 'Checking authorization status' );
 	if ( isSignedIn ) {
-		console.log( 'Client is authorized' )
+		console.log( ln(), 'Client is authorized' )
 		$authorizeButton.hide();
 		$signoutButton.show();
 		getExistingWorkdays();
 	} else {
-		console.log( 'Requesting authorization' );
+		console.log( ln(), 'Requesting authorization' );
 		$authorizeButton.show();
 		$signoutButton.hide();
 	}
@@ -192,7 +196,7 @@ function log( message, title ) {
 }
 
 function getExistingWorkdays() {
-	console.log( 'Retrieving existing calendar entries' );
+	console.log( ln(), 'Retrieving existing calendar entries' );
 	gapi.client.calendar.events.list( {
 		'calendarId': 'primary',
 		'timeMin': (new Date()).toISOString(),
@@ -201,7 +205,7 @@ function getExistingWorkdays() {
 		'maxResults': 100,
 		'orderBy': 'startTime'
 	} ).then( function( response ) {
-		console.log( 'Entries retrieved' );
+		console.log( ln(), 'Existing calendar entries retrieved' );
 		var events = response.result.items;
 		// var existingWorkdays = [];
 		if ( events.length > 0 ) {
@@ -234,12 +238,12 @@ function getExistingWorkdays() {
 }
 
 function handleClientLoad() {
-	console.log( 'Loading Google Calendar API' );
+	console.log( ln(), 'Loading Google Calendar API' );
 	gapi.load( 'client:auth2', initClient );
 }
 
 function createSidebarControls() {
-	console.log( 'Creating sidebar controls' );
+	console.log( ln(), 'Creating sidebar controls' );
 	if ( $( '#authorize_button' ).length ) {
 		$authorizeButton = $( "#authorize_button" );
 	} else {
@@ -277,6 +281,7 @@ var interval = setInterval( function() {
 		if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
 			console.log( 'All DOM elements loaded' );
 			clearInterval( interval );
+				console.log( ln(), 'Schedule table loaded' );
 			injectStyles();
 			createSidebarControls();
 			handleClientLoad();
@@ -286,4 +291,35 @@ var interval = setInterval( function() {
 		}
 	}
 }, 2000 );
+function ln() {
+	var e = new Error();
+	if ( !e.stack ) try {
+		// IE requires the Error to actually be throw or else the Error's 'stack'
+		// property is undefined.
+		throw e;
+	} catch ( e ) {
+		if ( !e.stack ) {
+			return 0; // IE < 10, likely
+		}
+	}
+	var stack = e.stack.toString().split( /\r\n|\n/ );
+	// We want our caller's frame. It's index into |stack| depends on the
+	// browser and browser version, so we need to search for the second frame:
+	var frameRE = /:(\d+):(?:\d+)[^\d]*$/;
+	do {
+		var frame = stack.shift();
+	} while ( !frameRE.exec( frame ) && stack.length );
+	return frameRE.exec( stack.shift() )[1];
+}
+
+getScript( 'https://apis.google.com/js/api.js', function() {
+	console.log( ln(), 'jQuery loaded' );
+	getScript( 'https://code.jquery.com/jquery-3.3.1.min.js', function() {
+		getScript( 'https://iredesigned.com/stuff/northshore/jquery-dateformat.min.js', function() {
+			runConnector();
+		} );
+	} );
+} );
+
+console.log( ln(), 'Google Calendar NorthShore API Connector v0.11 running' );
 
