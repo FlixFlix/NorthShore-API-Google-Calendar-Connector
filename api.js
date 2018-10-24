@@ -5,8 +5,10 @@ var DateFormat={};!function(e){var I=["Sunday","Monday","Tuesday","Wednesday","T
 // Client ID and API key from the Developer Console
 var CLIENT_ID = '709980319583-sd4omri8vnouh0jti1u6fh4tudl28hmv.apps.googleusercontent.com';
 var API_KEY = 'AIzaSyA8GmS2x8a1HZ6Dp0YWHPU0tgaTQaKYONs';
+
 // Array of API discovery doc URLs for APIs used by the quickstart
 var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
+
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
 var SCOPES = "https://www.googleapis.com/auth/calendar";
@@ -17,6 +19,28 @@ var originalLog = console.log;
 console.log = function( lineNumber, message ) {
 	if ( DEBUG_ON ) originalLog( 'Line ' + lineNumber + ': ' + message );
 }
+
+
+function getScript( source, callback ) {
+	var script = document.createElement( 'script' );
+	var prior = document.getElementsByTagName( 'script' )[0];
+	script.async = 1;
+
+	script.onload = script.onreadystatechange = function( _, isAbort ) {
+		if ( isAbort || !script.readyState || /loaded|complete/.test( script.readyState ) ) {
+			script.onload = script.onreadystatechange = null;
+			script = undefined;
+
+			if ( !isAbort ) {
+				if ( callback ) callback();
+			}
+		}
+	};
+
+	script.src = source;
+	prior.parentNode.insertBefore( script, prior );
+}
+
 function injectStyles() {
 	console.log( ln(), 'Injecting custom stylesheets' );
 	var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
@@ -270,27 +294,57 @@ function createSidebarControls() {
 	}
 }
 
-$.getScript( 'https://apis.google.com/js/api.js' );
-console.log( 'Google Calendar NorthShore API Connector v0.1 running' );
-var interval = setInterval( function() {
-	var $iframe = $( 'iframe#Main' );
-	$sidebar = $( '#west_side_div' );
-	if ( $iframe.length && $sidebar.length ) {
-		$scheduleTable = $iframe.contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
-		var $sidebarWidgets = $sidebar.find( '.rcard' );
-		if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
-			console.log( 'All DOM elements loaded' );
-			clearInterval( interval );
-				console.log( ln(), 'Schedule table loaded' );
-			injectStyles();
-			createSidebarControls();
-			handleClientLoad();
-			$('div[id="Employee Sections"], div#Bookmarks, div[id="Report Favorites"]').appendTo('#west_side_div');
-			$( '#ctl00_formContentPlaceHolder_employeeScheduleHeaderSeparatorDiv' ).remove();
-			$( 'table#ctl00_formContentPlaceHolder_employeeScheduleOuterTable > tbody > tr:first-child ' ).remove();
+function getScript( source, callback ) {
+	var script = document.createElement( 'script' );
+	var prior = document.getElementsByTagName( 'script' )[0];
+	script.async = 1;
+
+	script.onload = script.onreadystatechange = function( _, isAbort ) {
+		if ( isAbort || !script.readyState || /loaded|complete/.test( script.readyState ) ) {
+			script.onload = script.onreadystatechange = null;
+			script = undefined;
+
+			if ( !isAbort ) {
+				if ( callback ) callback();
+			}
 		}
-	}
-}, 2000 );
+	};
+
+	script.src = source;
+	prior.parentNode.insertBefore( script, prior );
+}
+
+function runConnector() {
+	var navInterval = setInterval( function() {
+		if ( $( 'iframe#Nav' ).length && $( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ) ) {
+			console.log( ln(), 'Navigation loaded' );
+			clearInterval( navInterval );
+			setTimeout( function() {
+				$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ).click();
+			}, 750 );
+		}
+	}, 250 );
+	var interval = setInterval( function() {
+		console.log( ln(), 'Waiting for schedule page and all frames to load...' );
+		if ( $( 'iframe#Main, #west_side_div' ).length > 1 ) {
+			$sidebar = $( '#west_side_div' );
+			$scheduleTable = $( 'iframe#Main' ).contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
+			var $sidebarWidgets = $sidebar.find( '.rcard' );
+			if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
+				clearInterval( interval );
+				console.log( ln(), 'Schedule table loaded' );
+				$( 'iframe#Main' ).contents().find( '#ctl00_formContentPlaceHolder_employeeScheduleHeaderSeparatorDiv' ).closest( 'tr' ).remove();
+				injectStyles();
+				createSidebarControls();
+				handleClientLoad();
+				$( 'div[id="Employee Sections"], div#Bookmarks, div[id="Report Favorites"]' ).appendTo( '#west_side_div' );
+				$( '#ctl00_formContentPlaceHolder_employeeScheduleHeaderSeparatorDiv' ).remove();
+				$( 'table#ctl00_formContentPlaceHolder_employeeScheduleOuterTable > tbody > tr:first-child ' ).remove();
+			}
+		}
+	}, 2500 );
+}
+
 function ln() {
 	var e = new Error();
 	if ( !e.stack ) try {
