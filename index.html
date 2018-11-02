@@ -43,26 +43,49 @@
         }
 
         .container {
-
             width: 100%;
             height: 100%;
-
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }
 
+        .box-container {
+            margin: 50px 0;
+            display: flex;
+            text-align: left;
+        }
+        .bookmarklet-link {
+            position: relative;
+        }
+        .arrow {
+            position: absolute;
+            left: 100%;
+            bottom: 50%;
+        }
+
+        .arrow img {
+            width: 108px;
+            height: 150px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    Drag this button into your browser's bookmarks bar.<br>
-    You can always rename it later, e.g. "NorthShore Sync" or whatever.<br>
-    Default name is now NS→GCal for brevity.<br>
     <div class="box-container">
-        <a id="bookmarklet" class="box"
-           href='javascript:(function()%7Bfunction%20callback()%7Balert("")%7Dvar%20s%3Ddocument.createElement(%22script%22)%3Bs.src%3D%22https%3A%2F%2Firedesigned.com%2Fstuff%2Fnorthshore%2Fapi.js%22%3Bif(s.addEventListener)%7Bs.addEventListener(%22load%22%2Ccallback%2Cfalse)%7Delse%20if(s.readyState)%7Bs.onreadystatechange%3Dcallback%7Ddocument.body.appendChild(s)%3B%7D)()'>NS→GCal</a>
+        <p class="instructions">
+            Drag this button into your browser's bookmarks bar.<br>
+            You can always rename it later, e.g. "NorthShore Sync" or whatever.<br>
+            Default name is now NS→GCal for brevity.<br>
+        </p>
+        <div class="bookmarklet-link">
+            <a id="bookmarklet" class="box"
+               href='javascript:(function()%7Bfunction%20callback()%7Balert("")%7Dvar%20s%3Ddocument.createElement(%22script%22)%3Bs.src%3D%22https%3A%2F%2Firedesigned.com%2Fstuff%2Fnorthshore%2Fapi.js%22%3Bif(s.addEventListener)%7Bs.addEventListener(%22load%22%2Ccallback%2Cfalse)%7Delse%20if(s.readyState)%7Bs.onreadystatechange%3Dcallback%7Ddocument.body.appendChild(s)%3B%7D)()'>NS→GCal</a>
+            <div class="arrow">
+                <img src="arrow.svg"/>
+            </div>
+        </div>
     </div>
     To use, click this new bookmark when viewing your schedule.<br>
     Wait for the blue button to appear in the left sidebar and click it.<br>
