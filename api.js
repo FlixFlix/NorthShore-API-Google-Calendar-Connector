@@ -12,6 +12,9 @@ var SCOPES = "https://www.googleapis.com/auth/calendar";
 // Enable verbose logging for debug purposes
 var DEBUG_ON = true;
 
+// Enable verbose logging for debug purposes
+var STYLES_ON = false;
+
 var originalLog = console.log;
 console.log = function( lineNumber, message ) {
 	if ( DEBUG_ON ) originalLog( 'Line ' + lineNumber + ': ' + message );
@@ -40,12 +43,16 @@ function getScript( source, callback ) {
 }
 
 function injectStyles() {
-	console.log( ln(), 'Injecting custom stylesheets' );
-	var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
-	$( 'iframe#Nav' ).contents().find( 'body' ).append( sheet );
-	$( 'iframe#Main' ).contents().find( 'body' ).append( sheet );
-	$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( 'body' ).append( sheet );
-	$( 'body' ).append( sheet );
+	if ( STYLES_ON ) {
+		console.log( ln(), 'Injecting custom stylesheets' );
+		var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
+		$( 'iframe#Nav' ).contents().find( 'body' ).append( sheet );
+		$( 'iframe#Main' ).contents().find( 'body' ).append( sheet );
+		$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( 'body' ).append( sheet );
+		$( 'body' ).append( sheet );
+	} else {
+		console.log( ln(), 'Not injecting stylesheets' );
+	}
 }
 
 function syncEvents( workDates, existingWorkEvents ) {
