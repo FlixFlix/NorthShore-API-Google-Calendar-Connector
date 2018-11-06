@@ -16,26 +16,6 @@ var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $controls, 
 
 var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $sidebar, $navbar;
 
-function getScript( source, callback ) {
-	var script = document.createElement( 'script' );
-	var prior = document.getElementsByTagName( 'script' )[0];
-	script.async = 1;
-
-	script.onload = script.onreadystatechange = function( _, isAbort ) {
-		if ( isAbort || !script.readyState || /loaded|complete/.test( script.readyState ) ) {
-			script.onload = script.onreadystatechange = null;
-			script = undefined;
-
-			if ( !isAbort ) {
-				if ( callback ) callback();
-			}
-		}
-	};
-
-	script.src = source;
-	prior.parentNode.insertBefore( script, prior );
-}
-
 function injectStyles() {
 	var navSheet = '<link href="https://iredesigned.com/stuff/northshore/navbar.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
 	$( 'iframe#Nav' ).contents().find( 'body' ).append( navSheet );
