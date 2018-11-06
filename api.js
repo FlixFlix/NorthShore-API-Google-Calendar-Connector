@@ -14,11 +14,9 @@ var STYLES_ON = false;
 
 var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $controls, $statusContent;
 
-var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $sidebar, $navbar;
-
 function injectStyles() {
-	var navSheet = '<link href="https://iredesigned.com/stuff/northshore/navbar.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
-	$( 'iframe#Nav' ).contents().find( 'body' ).append( navSheet );
+	var navSheet = '<link href="https://iredesigned.com/stuff/northshore/controls.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
+	$( 'body' ).append( navSheet );
 	if ( STYLES_ON ) {
 		console.log( 'Injecting custom stylesheets' );
 		var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
@@ -52,6 +50,12 @@ function syncEvents( workDates, existingWorkEvents ) {
 		);
 	*/
 	// log( crossCheckDates.length + " days already in calendar", crossCheckDates );
+	function dateDiffInDays( a, b ) {
+		const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+		const utc1 = Date.UTC( a.getFullYear(), a.getMonth(), a.getDate() );
+		const utc2 = Date.UTC( b.getFullYear(), b.getMonth(), b.getDate() );
+		return Math.floor( (utc2 - utc1) / _MS_PER_DAY );
+	}
 	for ( var i = 0; i < workDates.length; i++ ) {
 		let date = workDates[i];
 		let startTime = new Date( date.year, date.month - 1, date.day );
@@ -64,13 +68,6 @@ function syncEvents( workDates, existingWorkEvents ) {
 		var consecutive = false;
 		let dateNext = workDates[i + 1];
 		if ( dateNext ) {
-			function dateDiffInDays( a, b ) {
-				const _MS_PER_DAY = 1000 * 60 * 60 * 24;
-				const utc1 = Date.UTC( a.getFullYear(), a.getMonth(), a.getDate() );
-				const utc2 = Date.UTC( b.getFullYear(), b.getMonth(), b.getDate() );
-				return Math.floor( (utc2 - utc1) / _MS_PER_DAY );
-			}
-
 			let date1 = new Date( date.year, date.month - 1, date.day );
 			let date2 = new Date( dateNext.year, dateNext.month - 1, dateNext.day );
 			if ( dateDiffInDays( date1, date2 ) == 1 ) {
@@ -133,13 +130,16 @@ function syncEvents( workDates, existingWorkEvents ) {
 		sendBatchToCalendar( eventsToAdd );
 	} else {
 		console.log( 'No updates needed, calendar is in sync' );
-		log( "Calendar synced, no changes" );
+		status( "Calendar synced, no changes" );
 	}
+
+	$resyncButton.show();
 	// TODO True syncing; i.e. remove events that are in GCal but not in NorthShore. Quite rare; not very important. Also relatively complex due to the possibility of user changing periods and past events in particular.
 }
 
 function sendBatchToCalendar( events ) {
 	console.log( 'Sending ' + events.length + ' events to calendar' );
+	console.log( events );
 	var batch = gapi.client.newBatch();
 	var title = '';
 	events.forEach( function( event ) {
@@ -151,7 +151,7 @@ function sendBatchToCalendar( events ) {
 	} );
 	batch.then( function() {
 		console.log( events.length + ' events sent' );
-		log( events.length + " events synced", title );
+		status( events.length + " events synced", title );
 	} );
 }
 
@@ -167,7 +167,8 @@ function sendSingleEventToCalendar( event ) {
 
 function getCurrentRange() {
 	var currentPeriodText = $( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( '#ctl00_formContentPlaceHolder_dateRangeLabel' ).text();
-	var shortenedCurrentPeriodText = currentPeriodText.replace( /\/20/g, '/' );
+	var currentPeriodTextDates = currentPeriodText.replace( '', '' );
+	var shortenedCurrentPeriodText = currentPeriodTextDates.replace( /\/20/g, '/' );
 	var rangeStartText = shortenedCurrentPeriodText.substr( 7, 8 );
 	var rangeEndText = shortenedCurrentPeriodText.substr( 18, 8 );
 	$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( '#ctl00_formContentPlaceHolder_dateRangeLabel' ).html( shortenedCurrentPeriodText );
@@ -228,8 +229,6 @@ function initClient( el ) {
 		gapi.auth2.getAuthInstance().isSignedIn.listen( updateSigninStatus );
 		// Handle the initial sign-in state.
 		updateSigninStatus( gapi.auth2.getAuthInstance().isSignedIn.get() );
-		$authorizeButton.on( 'click', handleAuthClick );
-		$signoutButton.on( 'click', handleSignoutClick );
 	} );
 }
 
@@ -240,11 +239,12 @@ function updateSigninStatus( isSignedIn ) {
 		console.log( 'Client is authorized' )
 		$authorizeButton.hide();
 		$signoutButton.show();
-		getExistingWorkdays();
+		runWorkdays();
 	} else {
-		console.log( 'Requesting authorization' );
+		console.log( 'Authorization button enabled, waiting for user to log in' );
 		$authorizeButton.show();
 		$signoutButton.hide();
+		$resyncButton.hide();
 	}
 }
 
@@ -256,11 +256,10 @@ function handleSignoutClick( event ) {
 	gapi.auth2.getAuthInstance().signOut();
 }
 
-function log( message, title ) {
-	var $pre = $( 'iframe#Nav' ).contents().find( '#status_content' );
+function status( message, title ) {
 	var $text = $( '<div class="bounceIn">'+message + '</div>' );
-	$pre.append( $text );
-	if ( title !== undefined ) $pre.find( 'div:last-child' ).attr( 'title', title );
+	$statusContent.html( $text );
+	if ( title !== undefined ) $statusContent.find( 'div:last-child' ).attr( 'title', title );
 }
 
 function deleteEvent( event ) {
@@ -280,8 +279,14 @@ function deleteEvent( event ) {
 	} );
 }
 
-function getExistingWorkdays() {
-	console.log( ln(), 'Retrieving existing calendar entries' );
+function runWorkdays( event ) {
+	console.log( 'Retrieving existing calendar entries' );
+	var existingWorkdays = [];
+	var currentRange = getCurrentRange();
+	var currentRangeStart = currentRange['start'];
+	var currentRangeEnd = currentRange['end'];
+	console.log( currentRangeStart );
+	console.log( currentRangeEnd );
 	var timeMin = new Date();
 	timeMin.setDate( timeMin.getDate() - 100 ); // TODO Don't (?) go too far back so that old events are deleted but never replaced. Or re-do existing checking.
 	gapi.client.calendar.events.list( {
@@ -294,21 +299,16 @@ function getExistingWorkdays() {
 	} ).then( function( response ) {
 		console.log( 'Existing calendar entries retrieved' );
 		var events = response.result.items;
-		var existingWorkdays = [];
 		if ( events.length > 0 ) {
 			for ( i = 0; i < events.length; i++ ) {
 				var event = events[i];
 				if ( event.description === "Save lives in the ICU" ) {
 					var eventDate = new Date( event.start.date );
-					var currentRange = getCurrentRange();
-					var currentRangeStart = currentRange['start'];
-					var currentRangeEnd = currentRange['end'];
 					if ( (eventDate >= currentRangeStart) && (eventDate <= currentRangeEnd) ) deleteEvent( event );
 					existingWorkdays.push( event );
 				}
 			}
 		}
-
 		syncEvents( parseScheduleTable(), existingWorkdays );
 	} );
 }
@@ -320,38 +320,27 @@ function handleClientLoad() {
 
 function createSidebarControls() {
 	console.log( 'Creating sidebar controls' );
-	$sidebar = $( '<div id="api_navbar"></div>' );
-	$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_logoutAI' ).after( $sidebar );
-	console.log( $sidebar );
-	if ( $( '#authorize_button' ).length ) {
-		$authorizeButton = $( "#authorize_button" );
+	$controls = $( '#api_controls' );
+	if ( $controls.length == 0 ) {
+		var $navbar = $( 'iframe#Nav' );
+		$navbar.css( 'width', 'calc(100% - 425px)' );
+		$controls = $( '<div id="api_controls"></div>' );
+		$navbar.after( $controls );
+
+		$authorizeButton = $( '<button class="material-button-raised" id="authorize_button" style="display: none;">Authorize Google Calendar</button>' );
+		$statusContent = $( '<pre id="status_content" style="font-family: sans-serif; font-size: 14px; color: #eee; font-weight: normal; font-size: 13px; line-height: 1.5;">GCal Connector v0.2</pre>' );
+		$resyncButton = $( '<button class="material-button-raised" id="resync_button" style="display: none;">Resync current date range</button>' );
+		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="display: none;">Deauthorize</button>' );
+		$controls.append( $authorizeButton, $statusContent, $resyncButton, $signoutButton );
+
+		$authorizeButton.on( 'click', handleAuthClick );
+		$signoutButton.on( 'click', handleSignoutClick );
+		$resyncButton.on( 'click', runWorkdays );
+		$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( '#ctl00_formContentPlaceHolder_nextAlphaImage, #ctl00_formContentPlaceHolder_prevAlphaImage' ).remove();
+		$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( '#ctl00_formContentPlaceHolder_dateRangeLabel' )
+			.after( '<div style="margin-top: 8px">Please reload the page to change the current range. Run the connector again if you need to sync the new workdays.</div>' );
 	} else {
-		$authorizeButton = $( '<button class="material-button-raised" id="authorize_button" style="display: none;">Authorize<br>Google Calendar</button>' );
-		$sidebar.prepend( $authorizeButton );
-	}
-	if ( $( '#status_content' ).length ) {
-		$statusContent = $( "#status_content" );
-	} else {
-		$statusContent = $( '<pre id="status_content" style="font-family: sans-serif; font-size: 14px; color: #6200ee; font-weight: normal; font-size: 13px; line-height: 1.5;"></pre>' );
-		$sidebar.append( $statusContent );
-	}
-	if ( $( '#resync_button' ).length ) {
-		$resyncButton = $( "#resync_button" );
-	} else {
-		$resyncButton = $( '<button id="resync_button" style="width: 100%; display: none;">Resync with shown period</button>' );
-		$sidebar.append( $resyncButton );
-	}
-	if ( $( '#signout_button' ).length ) {
-		$signoutButton = $( "#signout_button" );
-	} else {
-		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="margin-top: 1px; display: none;">Deauthorize</button>' );
-		$sidebar.append( $signoutButton );
-	}
-	if ( $( '#signout_button' ).length ) {
-		$signoutButton = $( "#signout_button" );
-	} else {
-		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="margin-top: 1px; display: none;">Deauthorize</button>' );
-		$sidebar.append( $signoutButton );
+		console.log( 'Not creating controls, they already exist' )
 	}
 }
 
@@ -376,21 +365,20 @@ function getScript( source, callback ) {
 }
 
 function runConnector() {
-	var navInterval = setInterval( function() {
-		if ( $( 'iframe#Nav' ).length && $( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ) ) {
+	// var navInterval = setInterval( function() {
+	// 	if ( $( 'iframe#Nav' ).length && $( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ) ) {
 	// 		console.log( 'Navigation loaded' );
-			clearInterval( navInterval );
-			setTimeout( function() {
-				$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ).click();
-			}, 750 );
-		}
-	}, 250 );
+	// 		clearInterval( navInterval );
+	// 		setTimeout( function() {
+	// 			$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ).click();
+	// 		}, 750 );
+	// 	}
+	// }, 250 );
 	var interval = setInterval( function() {
 		console.log( 'Waiting for schedule page and all frames to load...' );
 		if ( $( 'iframe#Main, #west_side_div' ).length > 1 ) {
-			$sidebar = $( '#west_side_div' );
 			$scheduleTable = $( 'iframe#Main' ).contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
-			var $sidebarWidgets = $sidebar.find( '.rcard' );
+			var $sidebarWidgets = $( '#west_side_div' ).find( '.rcard' );
 			if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
 				clearInterval( interval );
 				console.log( 'Schedule table loaded' );

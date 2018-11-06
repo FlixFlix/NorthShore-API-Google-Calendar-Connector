@@ -36,7 +36,7 @@ TABLE.selfSchedule TH, TABLE.selfSchedule TD {
 
 /*Date range*/
 #ctl00_formContentPlaceHolder_dateRangeLabel {
-	line-height: 20px;
+	line-height: 22px;
 }
 
 #ctl00_formContentPlaceHolder_scheduleExceptionTableContainer,
