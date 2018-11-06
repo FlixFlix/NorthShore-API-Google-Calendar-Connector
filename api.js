@@ -10,15 +10,9 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 var SCOPES = "https://www.googleapis.com/auth/calendar";
 
 // Enable verbose logging for debug purposes
-var DEBUG_ON = true;
-
-// Enable verbose logging for debug purposes
 var STYLES_ON = false;
 
-var originalLog = console.log;
-console.log = function( lineNumber, message ) {
-	if ( DEBUG_ON ) originalLog( 'Line ' + lineNumber + ': ' + message );
-}
+var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $controls, $statusContent;
 
 var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $sidebar, $navbar;
 
@@ -46,19 +40,19 @@ function injectStyles() {
 	var navSheet = '<link href="https://iredesigned.com/stuff/northshore/navbar.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
 	$( 'iframe#Nav' ).contents().find( 'body' ).append( navSheet );
 	if ( STYLES_ON ) {
-		console.log( ln(), 'Injecting custom stylesheets' );
+		console.log( 'Injecting custom stylesheets' );
 		var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
 		$( 'iframe#Nav' ).contents().find( 'body' ).append( sheet );
 		$( 'iframe#Main' ).contents().find( 'body' ).append( sheet );
 		$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( 'body' ).append( sheet );
 		$( 'body' ).append( sheet );
 	} else {
-		console.log( ln(), 'Not injecting stylesheets' );
+		console.log( 'Not injecting stylesheets' );
 	}
 }
 
 function syncEvents( workDates, existingWorkEvents ) {
-	// console.log( ln(), 'Comparing existing events with schedule table' );
+	// console.log( 'Comparing existing events with schedule table' );
 	// var crossCheckDates = [];
 	var eventsToAdd = [];
 	// Build date-only array
@@ -158,14 +152,14 @@ function syncEvents( workDates, existingWorkEvents ) {
 	if ( eventsToAdd.length ) {
 		sendBatchToCalendar( eventsToAdd );
 	} else {
-		console.log( ln(), 'No updates needed, calendar is in sync' );
+		console.log( 'No updates needed, calendar is in sync' );
 		log( "Calendar synced, no changes" );
 	}
 	// TODO True syncing; i.e. remove events that are in GCal but not in NorthShore. Quite rare; not very important. Also relatively complex due to the possibility of user changing periods and past events in particular.
 }
 
 function sendBatchToCalendar( events ) {
-	console.log( ln(), 'Sending ' + events.length + ' events to calendar' );
+	console.log( 'Sending ' + events.length + ' events to calendar' );
 	var batch = gapi.client.newBatch();
 	var title = '';
 	events.forEach( function( event ) {
@@ -176,13 +170,13 @@ function sendBatchToCalendar( events ) {
 		} ) );
 	} );
 	batch.then( function() {
-		console.log( ln(), events.length + ' events sent' );
+		console.log( events.length + ' events sent' );
 		log( events.length + " events synced", title );
 	} );
 }
 
 function sendSingleEventToCalendar( event ) {
-	console.log( ln(), event );
+	console.log( event );
 	var request = gapi.client.calendar.events.insert( {
 		'calendarId': 'primary',
 		'resource': event
@@ -242,14 +236,14 @@ function handleClientLoad() {
 
 // Initializes the API client library and sets up sign-in state listeners.
 function initClient( el ) {
-	console.log( ln(), 'Initializing API client' );
+	console.log( 'Initializing API client' );
 	gapi.client.init( {
 		apiKey: API_KEY,
 		clientId: CLIENT_ID,
 		discoveryDocs: DISCOVERY_DOCS,
 		scope: SCOPES
 	} ).then( function() {
-		console.log( ln(), 'API client initialized' );
+		console.log( 'API client initialized' );
 		// Listen for sign-in state changes.
 		gapi.auth2.getAuthInstance().isSignedIn.listen( updateSigninStatus );
 		// Handle the initial sign-in state.
@@ -261,14 +255,14 @@ function initClient( el ) {
 
 // Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
 function updateSigninStatus( isSignedIn ) {
-	console.log( ln(), 'Checking authorization status' );
+	console.log( 'Checking authorization status' );
 	if ( isSignedIn ) {
-		console.log( ln(), 'Client is authorized' )
+		console.log( 'Client is authorized' )
 		$authorizeButton.hide();
 		$signoutButton.show();
 		getExistingWorkdays();
 	} else {
-		console.log( ln(), 'Requesting authorization' );
+		console.log( 'Requesting authorization' );
 		$authorizeButton.show();
 		$signoutButton.hide();
 	}
@@ -297,10 +291,10 @@ function deleteEvent( event ) {
 		} );
 		request.execute( function( response ) {
 			if ( response.error || response == false ) {
-				console.log( ln(), 'Error' );
+				console.log( 'Error' );
 			}
 			else {
-				console.log( ln(), 'Successfully deleted ' + event.start.date + ' (including any immediately following days)' );
+				console.log( 'Successfully deleted ' + event.start.date + ' (including any immediately following days)' );
 			}
 		} );
 	} );
@@ -318,7 +312,7 @@ function getExistingWorkdays() {
 		'maxResults': 100,
 		'orderBy': 'startTime'
 	} ).then( function( response ) {
-		console.log( ln(), 'Existing calendar entries retrieved' );
+		console.log( 'Existing calendar entries retrieved' );
 		var events = response.result.items;
 		var existingWorkdays = [];
 		if ( events.length > 0 ) {
@@ -340,12 +334,12 @@ function getExistingWorkdays() {
 }
 
 function handleClientLoad() {
-	console.log( ln(), 'Loading Google Calendar API' );
+	console.log( 'Loading Google Calendar API' );
 	gapi.load( 'client:auth2', initClient );
 }
 
 function createSidebarControls() {
-	console.log( ln(), 'Creating sidebar controls' );
+	console.log( 'Creating sidebar controls' );
 	$sidebar = $( '<div id="api_navbar"></div>' );
 	$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_logoutAI' ).after( $sidebar );
 	console.log( $sidebar );
@@ -404,7 +398,7 @@ function getScript( source, callback ) {
 function runConnector() {
 	var navInterval = setInterval( function() {
 		if ( $( 'iframe#Nav' ).length && $( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ) ) {
-			console.log( ln(), 'Navigation loaded' );
+	// 		console.log( 'Navigation loaded' );
 			clearInterval( navInterval );
 			setTimeout( function() {
 				$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_employeeAI' ).click();
@@ -412,14 +406,14 @@ function runConnector() {
 		}
 	}, 250 );
 	var interval = setInterval( function() {
-		console.log( ln(), 'Waiting for schedule page and all frames to load...' );
+		console.log( 'Waiting for schedule page and all frames to load...' );
 		if ( $( 'iframe#Main, #west_side_div' ).length > 1 ) {
 			$sidebar = $( '#west_side_div' );
 			$scheduleTable = $( 'iframe#Main' ).contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
 			var $sidebarWidgets = $sidebar.find( '.rcard' );
 			if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
 				clearInterval( interval );
-				console.log( ln(), 'Schedule table loaded' );
+				console.log( 'Schedule table loaded' );
 				$( 'iframe#Main' ).contents().find( '#ctl00_formContentPlaceHolder_employeeScheduleHeaderSeparatorDiv' ).closest( 'tr' ).remove();
 				injectStyles();
 				createSidebarControls();
@@ -454,7 +448,7 @@ function ln() {
 }
 
 getScript( 'https://apis.google.com/js/api.js', function() {
-	console.log( ln(), 'jQuery loaded' );
+	console.log( 'jQuery loaded' );
 	getScript( 'https://code.jquery.com/jquery-3.3.1.min.js', function() {
 		getScript( 'https://iredesigned.com/stuff/northshore/jquery-dateformat.min.js', function() {
 			runConnector();
@@ -462,5 +456,5 @@ getScript( 'https://apis.google.com/js/api.js', function() {
 	} );
 } );
 
-console.log( ln(), 'Google Calendar NorthShore API Connector v0.11 running' );
+console.log( 'Google Calendar NorthShore API Connector v0.11 running' );
 
