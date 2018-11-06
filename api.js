@@ -43,6 +43,8 @@ function getScript( source, callback ) {
 }
 
 function injectStyles() {
+	var navSheet = '<link href="https://iredesigned.com/stuff/northshore/navbar.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
+	$( 'iframe#Nav' ).contents().find( 'body' ).append( navSheet );
 	if ( STYLES_ON ) {
 		console.log( ln(), 'Injecting custom stylesheets' );
 		var sheet = '<link href="https://iredesigned.com/stuff/northshore/style.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
@@ -281,7 +283,7 @@ function handleSignoutClick( event ) {
 }
 
 function log( message, title ) {
-	var $pre = $( '#status_content' );
+	var $pre = $( 'iframe#Nav' ).contents().find( '#status_content' );
 	var $text = $( '<div class="bounceIn">'+message + '</div>' );
 	$pre.append( $text );
 	if ( title !== undefined ) $pre.find( 'div:last-child' ).attr( 'title', title );
@@ -344,6 +346,9 @@ function handleClientLoad() {
 
 function createSidebarControls() {
 	console.log( ln(), 'Creating sidebar controls' );
+	$sidebar = $( '<div id="api_navbar"></div>' );
+	$( 'iframe#Nav' ).contents().find( '#ctl00_formContentPlaceHolder_logoutAI' ).after( $sidebar );
+	console.log( $sidebar );
 	if ( $( '#authorize_button' ).length ) {
 		$authorizeButton = $( "#authorize_button" );
 	} else {
