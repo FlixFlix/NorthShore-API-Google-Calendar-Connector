@@ -107,8 +107,29 @@ function syncEvents( workDates, existingWorkEvents ) {
 		}
 
 		if ( true ) {
+			let colorId;
+			/*
+			0 = Calendar color (green)
+			1 = Lavender
+			2 = Sage
+			3 = Grape
+			4 = Flamingo
+			5 = Banana
+			6 = Tangerine
+			7 = Peacock
+			8 = Graphite
+			9 = Blueberry
+			10 = Basil
+			11 = Tomato
+			>12 = Invalid; event will not be created
+			*/
+			if ( date.note === 'WORK' ) {
+				colorId = 7;
+			} else { // Holiday, vacation etc.
+				colorId = 8;
+			}
 			var newEventObject = {
-				'summary': 'WORK',
+				'summary': date.note,
 				'location': '777 Park Avenue West, Highland Park, IL',
 				'description': 'Save lives in the ICU',
 				'start': {
@@ -123,7 +144,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 					'useDefault': false,
 					'overrides': []
 				},
-				'colorId': 7
+				'colorId': colorId
 			};
 			eventsToAdd.push( newEventObject );
 		}
@@ -198,8 +219,15 @@ function parseScheduleTable() {
 		tableDate.year = year;
 
 		// Check if working that day
-		if ( $hours.eq( index ).text() ) {
-			var tableDateDate = new Date( tableDate.year, tableDate.month - 1, tableDate.day );
+		let cellContents = $hours.eq( index ).text();
+		if ( cellContents ) {
+			let cellNumbersCount = cellContents.replace( /[^0-9]/g, '' ).length;
+			if ( cellNumbersCount >= 4 ) { // Check if this isn't some holiday or vacation or whatever
+				// var tableDateDate = new Date( tableDate.year, tableDate.month - 1, tableDate.day );
+				tableDate.note = 'WORK';
+			} else {
+				tableDate.note = cellContents;
+			}
 			workdays.push( tableDate );
 		}
 	} );
@@ -294,8 +322,7 @@ function getExistingWorkdays() {
 		if ( events.length > 0 ) {
 			for ( i = 0; i < events.length; i++ ) {
 				var event = events[i];
-				if ( event.summary === "WORK" ) {
-
+				if ( event.description === "Save lives in the ICU" ) {
 					var eventDate = new Date( event.start.date );
 					var currentRange = getCurrentRange();
 					var currentRangeStart = currentRange['start'];
