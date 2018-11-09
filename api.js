@@ -56,73 +56,124 @@ function syncEvents( workDates, existingWorkEvents ) {
 		const utc2 = Date.UTC( b.getFullYear(), b.getMonth(), b.getDate() );
 		return Math.floor( (utc2 - utc1) / _MS_PER_DAY );
 	}
-	for ( var i = 0; i < workDates.length; i++ ) {
+
+	function areConsecutive( date1, date2 ) {
+		let a = new Date( date1.year, date1.month - 1, date1.day );
+		let b = new Date( date2.year, date2.month - 1, date2.day );
+		if ( dateDiffInDays( a, b ) == 1 ) {
+			// console.log( $.format.date( a, 'yyyy-MM-dd' ) + ' and ' + $.format.date( b, 'yyyy-MM-dd' ) + ' are consecutive' );
+			return true;
+		} else {
+			// console.log( $.format.date( a, 'yyyy-MM-dd' ) + ' and ' + $.format.date( b, 'yyyy-MM-dd' ) + ' are NOT consecutive' );
+			return false;
+		}
+	}
+
+	console.log( 'Traversing ' + workDates.length + ' workdays' );
+	var i = 0;
+	var numberOfConsecutiveSets = 0;
+	while ( i < workDates.length ) {
+		console.log( '\nProcessing workday ' + i );
 		let date = workDates[i];
 		let startTime = new Date( date.year, date.month - 1, date.day );
 		startTime.setHours( 7 );
 		startTime.setMinutes( 0 );
-		let endTime = new Date( date.year, date.month - 1, date.day );
+		let endTime;
+		// Check for consecutive days and merge calendar entries
+		var indexFirstInSet = i,
+			indexLastInSet = indexFirstInSet + 1,
+			consecutiveSet = false,
+			setLength = 0,
+			checkingForConsecutiveDates = true;
+		while ( checkingForConsecutiveDates ) {
+			let logDate = new Date( workDates[i].year, workDates[i].month - 1, workDates[i].day );
+			// console.log( 'Checking if workday ' + i + ' (' + $.format.date( logDate, 'yyyy-MM-dd' ) + ') has any consecutives' );
+			if ( workDates[indexLastInSet]
+				&& areConsecutive( workDates[i], workDates[indexLastInSet] )
+				&& workDates[indexFirstInSet].note === workDates[indexLastInSet].note ) {
+				console.log( '... and have matching descriptions' );
+				consecutiveSet = true;
+				setLength++;
+				i++;
+				indexLastInSet++;
+				checkingForConsecutiveDates = true;
+			} else {
+				// console.log( 'Workday ' + indexLastInSet + ' does NOT have consecutives' );
+				checkingForConsecutiveDates = false;
+				i++;
+
+			}
+		}
+		// while ( checkingForConsecutiveDates ) {
+		// 	console.log( 'Checking if workDays[' + i + '] has any consecutives' );
+		// 	checkingForConsecutiveDates = false;
+		// 	if ( workDates[indexLastInSet]
+		// 		&& areConsecutive( workDates[indexFirstInSet], workDates[indexLastInSet] )
+		// 		&& workDates[indexFirstInSet].note === workDates[indexLastInSet].note ) {
+		// 		console.log( 'Found consecutive set' );
+		// 		consecutiveSet = true;
+		// 		setLength++;
+		// 		i++;
+		// 		checkingForConsecutiveDates = true;
+		// 	}
+		// }
+
+		if ( consecutiveSet ) {
+			numberOfConsecutiveSets++;
+			endTime = new Date( workDates[indexLastInSet - 1].year, workDates[indexLastInSet - 1].month - 1, workDates[indexLastInSet - 1].day + 1 );
+			console.log( 'Found ' + setLength + ' consecutive days' );
+			// With multi-day all-day events, GCal needs an extra day for some reason
+		} else {
+			endTime = new Date( date.year, date.month - 1, date.day );
+		}
 		endTime.setHours( 19 );
 		endTime.setMinutes( 30 );
-		// Check for consecutive days and merge calendar entries
-		var consecutive = false;
-		let dateNext = workDates[i + 1];
-		if ( dateNext ) {
-			let date1 = new Date( date.year, date.month - 1, date.day );
-			let date2 = new Date( dateNext.year, dateNext.month - 1, dateNext.day );
-			if ( dateDiffInDays( date1, date2 ) == 1 ) {
-				consecutive = true;
-				endTime = new Date( dateNext.year, dateNext.month - 1, dateNext.day + 1 ); // GCal needs an extra day for some reason
-				endTime.setHours( 19 );
-				endTime.setMinutes( 30 );
-				i++;
-			}
-		}
 
-		if ( true ) {
-			let colorId;
-			/*
-			0 = Calendar color (green)
-			1 = Lavender
-			2 = Sage
-			3 = Grape
-			4 = Flamingo
-			5 = Banana
-			6 = Tangerine
-			7 = Peacock
-			8 = Graphite
-			9 = Blueberry
-			10 = Basil
-			11 = Tomato
-			>12 = Invalid; event will not be created
-			*/
-			if ( date.note === 'WORK' ) {
-				colorId = 7;
-			} else { // Holiday, vacation etc.
-				colorId = 8;
-			}
-			var newEventObject = {
-				'summary': date.note,
-				'location': '777 Park Avenue West, Highland Park, IL',
-				'description': 'Save lives in the ICU',
-				'start': {
-					'date': $.format.date( startTime, 'yyyy-MM-dd' ),
-					'timeZone': 'America/Chicago'
-				},
-				'end': {
-					'date': $.format.date( endTime, 'yyyy-MM-dd' ),
-					'timeZone': 'America/Chicago'
-				},
-				'reminders': {
-					'useDefault': false,
-					'overrides': []
-				},
-				'colorId': colorId
-			};
-			eventsToAdd.push( newEventObject );
+		i++;
+
+		let colorId;
+		// 0 = Calendar color (green)
+		// 1 = Lavender
+		// 2 = Sage
+		// 3 = Grape
+		// 4 = Flamingo
+		// 5 = Banana
+		// 6 = Tangerine
+		// 7 = Peacock
+		// 8 = Graphite
+		// 9 = Blueberry
+		// 10 = Basil
+		// 11 = Tomato
+		// 12 or higher = invalid color and the event will not be created
+		if ( date.note === 'WORK' ) {
+			colorId = 7;
+		} else { // Holiday, vacation etc.
+			colorId = 8;
 		}
+		var newEventObject = {
+			'summary': date.note,
+			'location': '777 Park Avenue West, Highland Park, IL',
+			'description': 'Save lives in the ICU',
+			'start': {
+				'date': $.format.date( startTime, 'yyyy-MM-dd' ),
+				'timeZone': 'America/Chicago'
+			},
+			'end': {
+				'date': $.format.date( endTime, 'yyyy-MM-dd' ),
+				'timeZone': 'America/Chicago'
+			},
+			'reminders': {
+				'useDefault': false,
+				'overrides': []
+			},
+			'colorId': colorId
+		};
+		eventsToAdd.push( newEventObject );
 
 	}
+	console.log( 'Traversed ' + i + ' workdays' );
+	console.log( numberOfConsecutiveSets + ' consecutive sets found. ' + eventsToAdd.length + ' events will be created' );
+	// console.log(eventsToAdd);
 	workDates.forEach( function( date, index, dates ) {
 	} );
 
