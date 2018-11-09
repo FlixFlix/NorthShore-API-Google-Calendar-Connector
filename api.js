@@ -425,6 +425,7 @@ function runConnector() {
 	// 		}, 750 );
 	// 	}
 	// }, 250 );
+	console.log( 'Connector running' );
 	var interval = setInterval( function() {
 		console.log( 'Waiting for schedule page and all frames to load...' );
 		if ( $( 'iframe#Main, #west_side_div' ).length > 1 ) {
@@ -442,38 +443,24 @@ function runConnector() {
 				$( 'table#ctl00_formContentPlaceHolder_employeeScheduleOuterTable > tbody > tr:first-child ' ).remove();
 			}
 		}
-	}, 2500 );
+	}, 250 );
 }
 
-function ln() {
-	var e = new Error();
-	if ( !e.stack ) try {
-		// IE requires the Error to actually be throw or else the Error's 'stack'
-		// property is undefined.
-		throw e;
-	} catch ( e ) {
-		if ( !e.stack ) {
-			return 0; // IE < 10, likely
-		}
-	}
-	var stack = e.stack.toString().split( /\r\n|\n/ );
-	// We want our caller's frame. It's index into |stack| depends on the
-	// browser and browser version, so we need to search for the second frame:
-	var frameRE = /:(\d+):(?:\d+)[^\d]*$/;
-	do {
-		var frame = stack.shift();
-	} while ( !frameRE.exec( frame ) && stack.length );
-	return frameRE.exec( stack.shift() )[1];
-}
-
-getScript( 'https://apis.google.com/js/api.js', function() {
-	console.log( 'jQuery loaded' );
-	getScript( 'https://code.jquery.com/jquery-3.3.1.min.js', function() {
-		getScript( 'https://iredesigned.com/stuff/northshore/jquery-dateformat.min.js', function() {
+console.log( 'Google Calendar NorthShore API Connector v0.12' );
+var apiConnectorLoaded = true,
+	allScriptsLoaded = false,
+	gapiLoaded = false,
+	jqueryLoaded = false;
+if ( !gapiLoaded ) getScript( 'https://apis.google.com/js/api.js', function() {
+	console.log( 'Google API loaded' );
+	if ( !jqueryLoaded ) getScript( 'https://code.jquery.com/jquery-3.3.1.min.js', function() {
+		console.log( 'jQuery loaded' );
+		jQuery( window ).keydown( function( e ) {
+			if ( e.keyCode === 123 ) debugger;
+		} );
+		if ( !allScriptsLoaded ) getScript( 'https://iredesigned.com/stuff/northshore/jquery-dateformat.min.js', function() {
+			allScriptsLoaded = true;
 			runConnector();
 		} );
 	} );
 } );
-
-console.log( 'Google Calendar NorthShore API Connector v0.11 running' );
-
