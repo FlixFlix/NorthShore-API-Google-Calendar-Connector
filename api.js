@@ -382,7 +382,7 @@ function createSidebarControls() {
 		$statusContent = $( '<pre id="status_content" style="font-family: sans-serif; font-size: 14px; color: #eee; font-weight: normal; font-size: 13px; line-height: 1.5;">GCal Connector v0.2</pre>' );
 		$resyncButton = $( '<button class="material-button-raised" id="resync_button" style="display: none;">Resync current date range</button>' );
 		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="display: none;">Deauthorize</button>' );
-		$controls.append( $authorizeButton, $statusContent, $resyncButton, $signoutButton );
+		$controls.append( $authorizeButton, $statusContent, /*$resyncButton,*/ $signoutButton );
 
 		$authorizeButton.on( 'click', handleAuthClick );
 		$signoutButton.on( 'click', handleSignoutClick );
