@@ -1,3 +1,9 @@
+// Defaults
+var LOCATION = '777 Park Avenue West, Highland Park, IL';
+var TIMEZONE = 'America/Chicago';
+var FORMAT = 'yyyy-MM-dd';
+var WORK = 'WORK';
+
 // Client ID and API key from the Developer Console
 var CLIENT_ID = '709980319583-sd4omri8vnouh0jti1u6fh4tudl28hmv.apps.googleusercontent.com';
 var API_KEY = 'AIzaSyA8GmS2x8a1HZ6Dp0YWHPU0tgaTQaKYONs';
@@ -61,10 +67,10 @@ function syncEvents( workDates, existingWorkEvents ) {
 		let a = new Date( date1.year, date1.month - 1, date1.day );
 		let b = new Date( date2.year, date2.month - 1, date2.day );
 		if ( dateDiffInDays( a, b ) == 1 ) {
-			// console.log( $.format.date( a, 'yyyy-MM-dd' ) + ' and ' + $.format.date( b, 'yyyy-MM-dd' ) + ' are consecutive' );
+			// console.log( $.format.date( a, FORMAT ) + ' and ' + $.format.date( b, FORMAT ) + ' are consecutive' );
 			return true;
 		} else {
-			// console.log( $.format.date( a, 'yyyy-MM-dd' ) + ' and ' + $.format.date( b, 'yyyy-MM-dd' ) + ' are NOT consecutive' );
+			// console.log( $.format.date( a, FORMAT ) + ' and ' + $.format.date( b, FORMAT ) + ' are NOT consecutive' );
 			return false;
 		}
 	}
@@ -87,7 +93,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 			checkingForConsecutiveDates = true;
 		while ( checkingForConsecutiveDates ) {
 			let logDate = new Date( workDates[i].year, workDates[i].month - 1, workDates[i].day );
-			// console.log( 'Checking if workday ' + i + ' (' + $.format.date( logDate, 'yyyy-MM-dd' ) + ') has any consecutives' );
+			// console.log( 'Checking if workday ' + i + ' (' + $.format.date( logDate, FORMAT ) + ') has any consecutives' );
 			if ( workDates[indexLastInSet]
 				&& areConsecutive( workDates[i], workDates[indexLastInSet] )
 				&& workDates[indexFirstInSet].note === workDates[indexLastInSet].note ) {
@@ -145,22 +151,22 @@ function syncEvents( workDates, existingWorkEvents ) {
 		// 10 = Basil
 		// 11 = Tomato
 		// 12 or higher = invalid color and the event will not be created
-		if ( date.note === 'WORK' ) {
+		if ( date.note === WORK ) {
 			colorId = 7;
 		} else { // Holiday, vacation etc.
 			colorId = 8;
 		}
 		var newEventObject = {
 			'summary': date.note,
-			'location': '777 Park Avenue West, Highland Park, IL',
+			'location': LOCATION,
 			'description': 'Save lives in the ICU',
 			'start': {
-				'date': $.format.date( startTime, 'yyyy-MM-dd' ),
-				'timeZone': 'America/Chicago'
+				'date': $.format.date( startTime, FORMAT ),
+				'timeZone': TIMEZONE
 			},
 			'end': {
-				'date': $.format.date( endTime, 'yyyy-MM-dd' ),
-				'timeZone': 'America/Chicago'
+				'date': $.format.date( endTime, FORMAT ),
+				'timeZone': TIMEZONE
 			},
 			'reminders': {
 				'useDefault': false,
@@ -252,7 +258,7 @@ function parseScheduleTable() {
 			let cellNumbersCount = cellContents.replace( /[^0-9]/g, '' ).length;
 			if ( cellNumbersCount >= 4 ) { // Check if this isn't some holiday or vacation or whatever
 				// var tableDateDate = new Date( tableDate.year, tableDate.month - 1, tableDate.day );
-				tableDate.note = 'WORK';
+				tableDate.note = WORK;
 			} else {
 				tableDate.note = cellContents;
 			}
