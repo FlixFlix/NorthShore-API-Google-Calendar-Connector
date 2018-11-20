@@ -3,6 +3,7 @@ var LOCATION = '777 Park Avenue West, Highland Park, IL';
 var TIMEZONE = 'America/Chicago';
 var FORMAT = 'yyyy-MM-dd';
 var WORK = 'WORK';
+var PENDING = 'Pending';
 
 // Client ID and API key from the Developer Console
 var CLIENT_ID = '709980319583-sd4omri8vnouh0jti1u6fh4tudl28hmv.apps.googleusercontent.com';
@@ -152,6 +153,8 @@ function syncEvents( workDates, existingWorkEvents ) {
 		// 12 or higher = invalid color and the event will not be created
 		if ( date.note === WORK ) {
 			colorId = 7;
+		} else if ( date.note === PENDING ) {
+			colorId = 2
 		} else { // Holiday, vacation etc.
 			colorId = 8;
 		}
@@ -265,39 +268,41 @@ function getCurrentRange() {
 }
 
 function cleanName( name ) {
-	let first, last, names;
+	let first = '', last = '', names = [], theCleanName = name;
 	names = name.split( ',' );
-	first = names[1].substring( 1 ).split(' ')[0];
-	last = names[0].split(' ')[0];
-	return first + ' ' + last;
+	if ( names.length ) {
+		first = names[1];
+		if ( first ) {
+			first = first.substr( 1 ).split( ' ' )[0];
+			// first = first.toUpperCase();
+		}
+		last = names[0];
+		if ( last ) last = last.split( ' ' )[0];
+		theCleanName = first + '&nbsp;' + last;
+	}
+	return theCleanName.replace( / /g, '&nbsp;' );
 }
 
 function getCoworkers( columnIndex ) {
 	$employeeTable;
 	var $rows = $employeeHoursTable.find( '>tbody>tr' );
-	var $names = $employeeTable;
-	var fullNames = [], names = [];
+	var names = [];
 	$rows.each( function( rowIndex ) {
 		let cellContents = $( this ).find( '>td' ).eq( columnIndex ).find( '.cellContents' ).text();
 		if ( cellContents ) {
 			let cellNumbersCount = cellContents.replace( /[^0-9]/g, '' ).length;
 			if ( cellNumbersCount >= 4 ) { // Check if this isn't some holiday or vacation or whatever
 				let employee = new Object();
-				employee.name = $employeeTable.find( '>tbody>tr' ).eq( rowIndex ).find( '>td' ).eq( 0 ).attr( 'title' );
-				employee.title = $employeeTable.find( '>tbody>tr' ).eq( rowIndex ).find( '>td' ).eq( 1 ).find( '.cellContents' ).text();
-				if ( employee.name ) fullNames.push( employee );
+				employee.name = cleanName( $employeeTable.find( '>tbody>tr' ).eq( rowIndex ).find( '>td' ).eq( 0 ).attr( 'title' ) );
+				if ( employee.name ) {
+					names.push( employee );
+					if ( cellContents.substr( 0, 1 ) === "¤" ) employee.name = "¤&nbsp;" + employee.name; // Check if pending schedule
+					employee.title = $employeeTable.find( '>tbody>tr' ).eq( rowIndex ).find( '>td' ).eq( 1 ).find( '.cellContents' ).text();
+					if ( employee.title.substring( 0, 2 ) === "RN" && employee.title.length > 2 ) employee.title = "RESOURCE";
+				}
 			}
 		}
 	} );
-	// fullNames.sort();
-	fullNames.forEach( function( el ) {
-		let worker = new Object();
-		worker.name = cleanName( el.name );
-		worker.title = el.title;
-		if ( worker.title.substring( 0, 2 ) === "RN" && worker.title.length > 2 ) worker.title = "RESOURCE";
-		names.push( worker );
-	} );
-	console.log( names );
 	return (names);
 }
 
@@ -336,6 +341,7 @@ function parseScheduleTable() {
 			} else {
 				tableDate.note = cellContents;
 			}
+			if ( cellContents.substr( 0, 1 ) === "¤" ) tableDate.note = PENDING;
 			tableDate.coworkers = getCoworkers( index );
 			workdays.push( tableDate );
 		}
