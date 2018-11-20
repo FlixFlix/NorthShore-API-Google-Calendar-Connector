@@ -18,7 +18,17 @@ var SCOPES = "https://www.googleapis.com/auth/calendar";
 // Enable verbose logging for debug purposes
 var STYLES_ON = false;
 
-var $authorizeButton, $signoutButton, $resyncButton, $scheduleTable, $controls, $statusContent;
+var $controls,
+	$authorizeButton,
+	$signoutButton,
+	$resyncButton,
+
+	$statusContent,
+
+	$scheduleTable,
+	$employeeOuterTable,
+	$employeeTable,
+	$employeeHoursTable;
 
 function injectStyles() {
 	var navSheet = '<link href="https://iredesigned.com/stuff/northshore/controls.css?v=' + Math.floor( Math.random() * 10000 ) + '" type="text/css" rel="stylesheet">';
@@ -55,6 +65,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 			}
 		);
 	*/
+
 	// log( crossCheckDates.length + " days already in calendar", crossCheckDates );
 	function dateDiffInDays( a, b ) {
 		const _MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -79,47 +90,50 @@ function syncEvents( workDates, existingWorkEvents ) {
 	var i = 0;
 	var numberOfConsecutiveSets = 0;
 	while ( i < workDates.length ) {
-		console.log( '\nProcessing workday ' + i );
+		// console.log( '\nProcessing workday ' + i );
 		let date = workDates[i];
 		let startTime = new Date( date.year, date.month - 1, date.day );
 		startTime.setHours( 7 );
 		startTime.setMinutes( 0 );
-		let endTime;
+		let endTime = new Date( date.year, date.month - 1, date.day + 1 );
 		// Check for consecutive days and merge calendar entries
-		var indexFirstInSet = i,
-			indexLastInSet = indexFirstInSet + 1,
-			consecutiveSet = false,
-			setLength = 0,
-			checkingForConsecutiveDates = true;
-		while ( checkingForConsecutiveDates ) {
-			let logDate = new Date( workDates[i].year, workDates[i].month - 1, workDates[i].day );
-			// console.log( 'Checking if workday ' + i + ' (' + $.format.date( logDate, FORMAT ) + ') has any consecutives' );
-			if ( workDates[indexLastInSet]
-				&& areConsecutive( workDates[i], workDates[indexLastInSet] )
-				&& workDates[indexFirstInSet].note === workDates[indexLastInSet].note ) {
-				console.log( '... and have matching descriptions' );
-				consecutiveSet = true;
-				setLength++;
-				i++;
-				indexLastInSet++;
-				checkingForConsecutiveDates = true;
-			} else {
-				// console.log( 'Workday ' + indexLastInSet + ' does NOT have consecutives' );
-				checkingForConsecutiveDates = false;
-			}
-		}
+		/* Disable consecutive day checking so that colleagues can be added for each day
 
-		if ( consecutiveSet ) {
-			numberOfConsecutiveSets++;
-			endTime = new Date( workDates[indexLastInSet - 1].year, workDates[indexLastInSet - 1].month - 1, workDates[indexLastInSet - 1].day + 1 );
-			console.log( 'Found ' + setLength + ' consecutive days' );
-			// With multi-day all-day events, GCal needs an extra day for some reason
-		} else {
-			endTime = new Date( date.year, date.month - 1, date.day );
-		}
+				var indexFirstInSet = i,
+					indexLastInSet = indexFirstInSet + 1,
+					consecutiveSet = false,
+					setLength = 0,
+					checkingForConsecutiveDates = true;
+				while ( checkingForConsecutiveDates ) {
+					let logDate = new Date( workDates[i].year, workDates[i].month - 1, workDates[i].day );
+					// console.log( 'Checking if workday ' + i + ' (' + $.format.date( logDate, FORMAT ) + ') has any consecutives' );
+					if ( workDates[indexLastInSet]
+						&& areConsecutive( workDates[i], workDates[indexLastInSet] )
+						&& workDates[indexFirstInSet].note === workDates[indexLastInSet].note ) {
+						// console.log( '... and have matching descriptions' );
+						consecutiveSet = true;
+						setLength++;
+						i++;
+						indexLastInSet++;
+						checkingForConsecutiveDates = true;
+					} else {
+						// console.log( 'Workday ' + indexLastInSet + ' does NOT have consecutives' );
+						checkingForConsecutiveDates = false;
+					}
+				}
+
+				if ( consecutiveSet ) {
+					numberOfConsecutiveSets++;
+					endTime = new Date( workDates[indexLastInSet - 1].year, workDates[indexLastInSet - 1].month - 1, workDates[indexLastInSet - 1].day + 1 );
+					// console.log( 'Found ' + setLength + ' consecutive days' );
+					// GCal needs an extra day for some reason for the end date
+				} else {
+					endTime = new Date( date.year, date.month - 1, date.day );
+				}
+
+		*/
 		endTime.setHours( 19 );
 		endTime.setMinutes( 30 );
-
 		i++;
 
 		let colorId;
@@ -141,10 +155,40 @@ function syncEvents( workDates, existingWorkEvents ) {
 		} else { // Holiday, vacation etc.
 			colorId = 8;
 		}
+
+		// Generate coworker table
+		let table = '<table width="100%" cellspacing="0" cellpadding="5" border="1"><tr>';
+		table += '<thead></thead><tr><th>Nurses</th><th>PCTs</th></tr></thead>';
+		table += '<tbody>';
+
+		let j = 0, nurses = [], pcts = [], cc = "No coordinator today", uc = "No secretary today";
+		console.log( date );
+		date.coworkers.forEach( function( el ) {
+			if ( el.title === "RN" ) nurses.push( el.name );
+			if ( el.title === "RESOURCE" ) nurses.push( el.name + " (R)" );
+			if ( el.title === "PCT" ) pcts.push( el.name );
+			if ( el.title === "CC" ) cc = el.name;
+			if ( el.title === "UC" ) uc = el.name;
+			j++;
+		} );
+		for ( let i = 0; i <= j; i++ ) {
+			if ( nurses[i] || pcts[i] ) {
+				let rn = "&nbsp;", pct = "&nbsp;";
+				if ( nurses[i] ) rn = nurses[i];
+				if ( pcts[i] ) pct = pcts[i];
+				table += '<tr><td>' + rn + '</td><td>' + pct + '</td></tr>';
+			}
+		}
+		table += '</tbody>';
+		table += '</table>';
+		table += '<br><table width="100%" cellspacing="0" cellpadding="5" border="1">';
+		table += '<tr><th>Coordinator</th></tr><tr><td>' + cc + '</td></tr>';
+		table += '<tr><th>Secretary</th></tr><tr><td>' + uc + '</td></tr>';
+		table += '</table>';
 		var newEventObject = {
 			'summary': date.note,
 			'location': LOCATION,
-			'description': 'Save lives in the ICU',
+			'description': table,
 			'start': {
 				'date': $.format.date( startTime, FORMAT ),
 				'timeZone': TIMEZONE
@@ -169,6 +213,7 @@ function syncEvents( workDates, existingWorkEvents ) {
 	} );
 
 	if ( eventsToAdd.length ) {
+		console.log( eventsToAdd );
 		sendBatchToCalendar( eventsToAdd );
 	} else {
 		console.log( 'No updates needed, calendar is in sync' );
@@ -181,7 +226,6 @@ function syncEvents( workDates, existingWorkEvents ) {
 
 function sendBatchToCalendar( events ) {
 	console.log( 'Sending ' + events.length + ' events to calendar' );
-	console.log( events );
 	var batch = gapi.client.newBatch();
 	var title = '';
 	events.forEach( function( event ) {
@@ -219,12 +263,56 @@ function getCurrentRange() {
 	result['end'] = new Date( rangeEndText );
 	return result;
 }
+
+function cleanName( name ) {
+	let first, last, names;
+	names = name.split( ',' );
+	first = names[1].substring( 1 ).split(' ')[0];
+	last = names[0].split(' ')[0];
+	return first + ' ' + last;
+}
+
+function getCoworkers( columnIndex ) {
+	$employeeTable;
+	var $rows = $employeeHoursTable.find( '>tbody>tr' );
+	var $names = $employeeTable;
+	var fullNames = [], names = [];
+	$rows.each( function( rowIndex ) {
+		let cellContents = $( this ).find( '>td' ).eq( columnIndex ).find( '.cellContents' ).text();
+		if ( cellContents ) {
+			let cellNumbersCount = cellContents.replace( /[^0-9]/g, '' ).length;
+			if ( cellNumbersCount >= 4 ) { // Check if this isn't some holiday or vacation or whatever
+				let employee = new Object();
+				employee.name = $employeeTable.find( '>tbody>tr' ).eq( rowIndex ).find( '>td' ).eq( 0 ).attr( 'title' );
+				employee.title = $employeeTable.find( '>tbody>tr' ).eq( rowIndex ).find( '>td' ).eq( 1 ).find( '.cellContents' ).text();
+				if ( employee.name ) fullNames.push( employee );
+			}
+		}
+	} );
+	// fullNames.sort();
+	fullNames.forEach( function( el ) {
+		let worker = new Object();
+		worker.name = cleanName( el.name );
+		worker.title = el.title;
+		if ( worker.title.substring( 0, 2 ) === "RN" && worker.title.length > 2 ) worker.title = "RESOURCE";
+		names.push( worker );
+	} );
+	console.log( names );
+	return (names);
+}
+
 function parseScheduleTable() {
 	var $dates = $( $scheduleTable.find( 'tbody > tr' ).eq( 1 ).find( '.cellContents' ) );
 	var $hours = $( $scheduleTable.find( 'tbody > tr' ).eq( 2 ).find( '.cellContents' ) );
+	var $hoursAux = $( $scheduleTable.find( 'tbody > tr' ).eq( 3 ).find( '.cellContents' ) );
 	var workdays = [];
 	var lastMonthInSet = 1;
 	var year = getCurrentRange()['start'].getFullYear();
+
+	function isWorkday( column ) {
+
+	}
+
 	$dates.each( function( index, e ) {
 		let dateText = $( e ).text(); // Format is MM/DD
 		let tableDate = new Object();
@@ -238,7 +326,8 @@ function parseScheduleTable() {
 		tableDate.year = year;
 
 		// Check if working that day
-		let cellContents = $hours.eq( index ).text();
+		let cellContents = $hoursAux.eq( index ).text();
+		if ( !cellContents ) cellContents = $hours.eq( index ).text();
 		if ( cellContents ) {
 			let cellNumbersCount = cellContents.replace( /[^0-9]/g, '' ).length;
 			if ( cellNumbersCount >= 4 ) { // Check if this isn't some holiday or vacation or whatever
@@ -247,6 +336,7 @@ function parseScheduleTable() {
 			} else {
 				tableDate.note = cellContents;
 			}
+			tableDate.coworkers = getCoworkers( index );
 			workdays.push( tableDate );
 		}
 	} );
@@ -321,14 +411,26 @@ function deleteEvent( event ) {
 	} );
 }
 
-function runWorkdays( event ) {
-	console.log( 'Retrieving existing calendar entries' );
-	var existingWorkdays = [];
+function clearCalendar( events ) {
 	var currentRange = getCurrentRange();
 	var currentRangeStart = currentRange['start'];
 	var currentRangeEnd = currentRange['end'];
-	console.log( currentRangeStart );
-	console.log( currentRangeEnd );
+	console.log( 'Date range: ' + $.format.date( currentRangeStart, FORMAT ) + ' through ' + $.format.date( currentRangeEnd, FORMAT ) );
+	if ( events.length > 0 ) {
+		for ( let i = 0; i < events.length; i++ ) {
+			var event = events[i];
+			if ( event.location === LOCATION ) {
+				var eventDate = new Date( event.start.date );
+				if ( (eventDate >= currentRangeStart) && (eventDate <= currentRangeEnd) ) deleteEvent( event );
+				// existingWorkdays.push( event );
+			}
+		}
+	}
+}
+
+function runWorkdays( event ) {
+	console.log( 'Retrieving existing calendar entries' );
+	var existingWorkdays = [];
 	var timeMin = new Date();
 	timeMin.setDate( timeMin.getDate() - 100 ); // TODO Don't (?) go too far back so that old events are deleted but never replaced. Or re-do existing checking.
 	gapi.client.calendar.events.list( {
@@ -412,6 +514,9 @@ function runConnector() {
 		console.log( 'Waiting for schedule page and all frames to load...' );
 		if ( $( 'iframe#Main, #west_side_div' ).length > 1 ) {
 			$scheduleTable = $( 'iframe#Main' ).contents().find( 'table#ctl00_formContentPlaceHolder_myScheduleTable' );
+			$employeeOuterTable = $( 'iframe#Main' ).contents().find( 'table#ctl00_formContentPlaceHolder_employeeScheduleOuterTable' );
+			$employeeTable = $employeeOuterTable.find( 'table#ctl00_formContentPlaceHolder_orgUnitScheduleHeaderTable' );
+			$employeeHoursTable = $employeeOuterTable.find( 'table#ctl00_formContentPlaceHolder_orgUnitScheduleTable' );
 			var $sidebarWidgets = $( '#west_side_div' ).find( '.rcard' );
 			if ( ($scheduleTable.length > 0) && ($sidebarWidgets.length > 5) ) {
 				clearInterval( interval );
