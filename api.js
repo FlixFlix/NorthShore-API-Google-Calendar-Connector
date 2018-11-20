@@ -106,23 +106,8 @@ function syncEvents( workDates, existingWorkEvents ) {
 			} else {
 				// console.log( 'Workday ' + indexLastInSet + ' does NOT have consecutives' );
 				checkingForConsecutiveDates = false;
-				i++;
-
 			}
 		}
-		// while ( checkingForConsecutiveDates ) {
-		// 	console.log( 'Checking if workDays[' + i + '] has any consecutives' );
-		// 	checkingForConsecutiveDates = false;
-		// 	if ( workDates[indexLastInSet]
-		// 		&& areConsecutive( workDates[indexFirstInSet], workDates[indexLastInSet] )
-		// 		&& workDates[indexFirstInSet].note === workDates[indexLastInSet].note ) {
-		// 		console.log( 'Found consecutive set' );
-		// 		consecutiveSet = true;
-		// 		setLength++;
-		// 		i++;
-		// 		checkingForConsecutiveDates = true;
-		// 	}
-		// }
 
 		if ( consecutiveSet ) {
 			numberOfConsecutiveSets++;
@@ -356,16 +341,7 @@ function runWorkdays( event ) {
 	} ).then( function( response ) {
 		console.log( 'Existing calendar entries retrieved' );
 		var events = response.result.items;
-		if ( events.length > 0 ) {
-			for ( i = 0; i < events.length; i++ ) {
-				var event = events[i];
-				if ( event.description === "Save lives in the ICU" ) {
-					var eventDate = new Date( event.start.date );
-					if ( (eventDate >= currentRangeStart) && (eventDate <= currentRangeEnd) ) deleteEvent( event );
-					existingWorkdays.push( event );
-				}
-			}
-		}
+		clearCalendar( events );
 		syncEvents( parseScheduleTable(), existingWorkdays );
 	} );
 }
