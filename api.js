@@ -9,7 +9,7 @@ const
 	PENDING = 'Pending',
 	COWORKERS = 'Coworkers',
 	BLANK = 'BLANK',
-	DELAY = 100;
+	DELAY = 250;
 
 
 // Client ID and API key from the Developer Console
@@ -76,7 +76,7 @@ function createEventObject( title, details, startTime, endTime, colorId ) {
 	};
 }
 
-function syncEvents( range, events, calendarId, calendarName, fullTable ) {
+function syncEvents( range, events, calendarId, calendarName, isProcessFullTable ) {
 
 	var myWorkdays = [], coworkerDays = [];
 	// Build date-only array
@@ -157,7 +157,7 @@ function syncEvents( range, events, calendarId, calendarName, fullTable ) {
 	events.forEach( function( date, index, dates ) {
 	} );
 	var theBatch;
-	if ( fullTable )
+	if ( isProcessFullTable )
 		theBatch = coworkerDays;
 	else
 		theBatch = myWorkdays;
@@ -187,8 +187,8 @@ function sendBatchToCalendar( events, calendarId, calendarName ) {
 		} ) );
 	} );
 	batch.then( function() {
-		console.log( events.length + ' events sent: ' + title );
-		status( events.length + " events synced" );
+		console.log( events.length + ' events sent to calendar "' + calendarName + '": ' + title );
+		status( events.length + ' events synced to calendar "' + calendarName + '"' );
 	} );
 }
 
@@ -408,7 +408,7 @@ function deleteEvents( events, calendarId, calendarName, callback ) {
 		} );
 		var progress = 0;
 		request.execute( function( response ) {
-			if ( response.error || response == false ) {
+			if ( response.error || response === false ) {
 				console.error( 'Error deleting event' );
 				deletedEventErrors++;
 			}
@@ -416,15 +416,16 @@ function deleteEvents( events, calendarId, calendarName, callback ) {
 				deletedEventCounter++;
 			}
 			progress = deletedEventCounter + deletedEventErrors;
-			if ( progress == totalEvents ) {
+			if ( progress === totalEvents ) {
 				console.log( 'Calendar cleared: ' + deletedEventCounter + ' events deleted. ' + deletedEventErrors + ' errors.' );
-				status( 'Calendar cleared', deletedEventCounter + ' events deleted. ' + deletedEventErrors + ' errors.' );
+				status( '"' + calendarName + '" calendar cleared', deletedEventCounter + ' events deleted. ' + deletedEventErrors + ' errors.' );
+				callback();
 			}
 		} );
 	}
 }
 
-function clearSingleCalendar( range, calendarId, calendarName, callback ) {
+function clearCalendar( range, calendarId, calendarName, callback ) {
 	gapi.client.calendar.events.list( {
 		'q': APPNAME,
 		'calendarId': calendarId,
@@ -441,7 +442,7 @@ function clearSingleCalendar( range, calendarId, calendarName, callback ) {
 	} );
 }
 
-function clearThenSyncCalendar( calendarId, calendarName, scheduleTable, clearOnly, fullTable ) {
+function clearThenSyncCalendar( calendarId, calendarName, scheduleTable, clearOnly, isProcessFullTable ) {
 	// Retrieve existing events and delete them
 	var range = getCurrentRange();
 	if ( !range ) {
@@ -449,36 +450,46 @@ function clearThenSyncCalendar( calendarId, calendarName, scheduleTable, clearOn
 		return;
 	}
 	console.log( 'Retrieving existing entries from calendar "' + calendarName + '" so we can clear them. Date range: ' + $.format.date( range['start'], FORMAT ) + ' through ' + $.format.date( range['end'], FORMAT ) );
-	clearSingleCalendar( range, calendarId, calendarName, function() {
-		if ( !clearOnly ) syncEvents( range, scheduleTable, calendarId, calendarName, fullTable );
+	clearCalendar( range, calendarId, calendarName, function() {
+		if ( !clearOnly ) syncEvents( range, scheduleTable, calendarId, calendarName, isProcessFullTable );
 	} );
 }
 
-function getCalendars( clearOnly ) {
+function getCalendars( isClearOnly ) {
 	// We need to retrieve all calendars to obtain the calendarID of the "Coworkers" calendar
 	gapi.client.calendar.calendarList.list().execute( function( response ) {
 		var calendars = response.items;
 		// Check if a "Coworkers" calendar already exists and create one if not
-		var coworkersCalendarExists = false;
+		var coworkersCalendarExists = false,
+			primaryCalendarExists = false,
+			coworkersSummary = '',
+			primarySummary = '';
 		let scheduleTable = parseScheduleTable();
 		calendars.forEach( function( el ) {
 			if ( el.summary === COWORKERS ) {
-				console.log( 'Processing calendar "' + el.summary + '"' );
-				coworkersCalendarExists = true;
 				coworkersCalendarId = el.id;
-				clearThenSyncCalendar( coworkersCalendarId, el.summary, scheduleTable, clearOnly, true );
+				coworkersSummary = el.summary;
+				coworkersCalendarExists = true;
+				console.log( 'Processing calendar "' + coworkersSummary + '"' );
 			}
 			if ( el.primary ) {
-				console.log( 'Processing calendar "' + el.summary + '"' );
-				primaryCalendarId = el.id;
-				clearThenSyncCalendar( primaryCalendarId, el.summary, scheduleTable, clearOnly, false );
+				primaryCalendarId = 'primary';
+				primarySummary = el.summary;
+				primaryCalendarExists = true;
+				console.log( 'Processing calendar "' + primarySummary + '" (primary)' );
 			}
 		} );
+		if ( primaryCalendarExists ) {
+			console.log( 'Primary calendar found: ' + primarySummary );
+			clearThenSyncCalendar( primaryCalendarId, primarySummary, scheduleTable, isClearOnly, false );
+		} else {
+			console.log( 'Primary calendar NOT found. Cannot continue.' );
+		}
 		if ( coworkersCalendarExists ) {
-			// console.log( 'Coworkers calendar exists. All events will be synced.' );
+			console.log( 'Coworkers calendar exists. All events will be synced.' );
+			clearThenSyncCalendar( coworkersCalendarId, coworkersSummary, scheduleTable, isClearOnly, true );
 		} else {
 			console.log( 'Coworkers calendar does NOT exist. Please create one named "' + COWORKERS + '", then reload the page and run the script again.' );
-			// alert( 'Coworkers calendar does NOT exist. Please create one named "' + COWORKERS + '", then reload the page and run the script again.' );
 		}
 	} );
 }
@@ -564,7 +575,7 @@ function runConnector() {
 	}, DELAY );
 }
 
-console.log( 'Google Calendar NorthShore API Connector v0.12' );
+console.log( 'Google Calendar NorthShore API Connector v0.13' );
 var apiConnectorLoaded = true,
 	allScriptsLoaded = false,
 	connectorRunning = false;
