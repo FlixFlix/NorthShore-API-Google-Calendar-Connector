@@ -11,7 +11,6 @@ const
 	BLANK = 'BLANK',
 	DELAY = 250;
 
-
 // Client ID and API key from the Developer Console
 const CLIENT_ID = '709980319583-sd4omri8vnouh0jti1u6fh4tudl28hmv.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyA8GmS2x8a1HZ6Dp0YWHPU0tgaTQaKYONs';
@@ -28,9 +27,11 @@ var STYLES_ON = false;
 
 // jQuery globals
 var $controls,
+	$currentUser,
 	$authorizeButton,
 	$signoutButton,
 	$clearButton,
+	$runButton,
 
 	$statusContent,
 
@@ -337,25 +338,32 @@ function initClient( el ) {
 		// Listen for sign-in state changes.
 		gapi.auth2.getAuthInstance().isSignedIn.listen( updateSigninStatus );
 		// Handle the initial sign-in state.
-		updateSigninStatus( gapi.auth2.getAuthInstance().isSignedIn.get() );
+		updateSigninStatus();
 	} );
 }
 
 // Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
-function updateSigninStatus( isSignedIn ) {
+function updateSigninStatus( GoogleAuth ) {
 	console.log( 'Checking authorization status' );
+	var isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
 	if ( isSignedIn ) {
+		let fullName = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getName();
 		console.log( 'Client is authorized' );
+		toastr.clear();
+		status( 'Connected to calendar <strong>' + fullName + '</strong>' );
+		$currentUser.text( 'Calendar: ' + fullName );
 		$authorizeButton.hide();
 		$signoutButton.show();
 		$clearButton.show();
-		getCalendars( false );
+		$runButton.show();
 	} else {
 		console.log( 'Authorization button enabled, waiting for user to log in' );
-		toastr.warning( 'Please click the Authorize button and log in to your Google account.', 'You are not logged in' );
+		toastr.warning( 'Please click the Authorize button and log in to your Google account.', 'You are not logged in', { timeOut: 0 } );
+		$currentUser.text( 'Not logged in, click Authorize' );
 		$authorizeButton.show();
 		$signoutButton.hide();
 		$clearButton.hide();
+		$runButton.hide();
 	}
 }
 
@@ -381,8 +389,7 @@ function deleteEvents( events, calendarId, calendarName, callback ) {
 		status( 'Clearing calendar of previously-created workdays' );
 		console.log( 'Clearing calendar "' + calendarName + '" of ' + events.length + ' out of ' + events.length + ' events...' );
 		deletionLoop( events.length );
-	}
-	else {
+	} else {
 		console.log( 'Calendar "' + calendarName + '" only contains ' + events.length + ' events and they\'re all non-deletable.' );
 		callback();
 		return;
@@ -411,8 +418,7 @@ function deleteEvents( events, calendarId, calendarName, callback ) {
 			if ( response.error || response === false ) {
 				console.error( 'Error deleting event' );
 				deletedEventErrors++;
-			}
-			else {
+			} else {
 				deletedEventCounter++;
 			}
 			progress = deletedEventCounter + deletedEventErrors;
@@ -436,7 +442,6 @@ function clearCalendar( range, calendarId, calendarName, callback ) {
 		'orderBy': 'startTime'
 	} ).then( function( response ) {
 		console.log( 'Retrieved events from calendar "' + calendarName + '"' );
-		$signoutButton.attr( 'title', primaryCalendarId + ' - ' + calendarName );
 		var events = response.result.items;
 		deleteEvents( events, calendarId, calendarName, callback );
 	} );
@@ -503,16 +508,22 @@ function createControls() {
 		$controls = $( '<div id="api_controls"></div>' );
 		$navbar.after( $controls );
 
-		$authorizeButton = $( '<button class="material-button-raised" id="authorize_button" style="display: none;">Authorize Google Calendar</button>' );
-		$statusContent = $( '<pre id="status_content" style="height: 50px; overflow-y: auto; font-family: sans-serif; font-size: 14px; color: #eee; font-weight: normal; font-size: 13px; line-height: 1.5;">GCal Connector v0.2</pre>' );
-		$clearButton = $( '<button class="material-button-raised" id="resync_button" style="display: none;">Clear</button>' );
-		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="display: none;">Deauthorize</button>' );
-		$controls.append( $authorizeButton, /*$statusContent,*/ $clearButton, $signoutButton );
+		$currentUser = $( '<span class="status_user" id="status_user"></span>' );
+		$authorizeButton = $( '<button class="material-button-raised" id="authorize_button" style="display: none;">Authorize&nbsp;Google&nbsp;Calendar</button>' );
+		// $statusContent = $( '<pre id="status_content" style="height: 50px; overflow-y: auto; font-family: sans-serif; font-size: 14px; color: #eee; font-weight: normal; font-size: 13px; line-height: 1.5;">GCal Connector v0.2</pre>' );
+		$currentUser = $( '<pre id="status_content">GCal Connector v0.2</pre>' );
+		$clearButton = $( '<button class="material-button-raised" id="clear_button" style="display: none;" title="Clear all events created by this app for the current time period">Clear</button>' );
+		$runButton = $( '<button class="material-button-raised" id="run_button" style="display: none;" title="Clear and sync workdays for the current time period">Sync</button>' );
+		$signoutButton = $( '<button class="material-button-raised" id="signout_button" style="display: none;" title="Sign out of your Google account">Deauthorize</button>' );
+		$controls.append( $currentUser, $authorizeButton, /*$statusContent,*/ $runButton, $clearButton, $signoutButton );
 
 		$authorizeButton.on( 'click', handleAuthClick );
 		$signoutButton.on( 'click', handleSignoutClick );
 		$clearButton.on( 'click', function() {
 			getCalendars( true );
+		} );
+		$runButton.on( 'click', function() {
+			getCalendars( false );
 		} );
 		$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( '#ctl00_formContentPlaceHolder_nextAlphaImage, #ctl00_formContentPlaceHolder_prevAlphaImage' ).remove();
 		$( 'iframe#EmployeeSelfScheduleSet_iframe' ).contents().find( '#ctl00_formContentPlaceHolder_dateRangeLabel' )
@@ -585,9 +596,12 @@ getScript( 'https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js', f
 	$( 'body' ).addClass( 'ns-api' );
 	getScript( 'https://iredesigned.com/stuff/northshore/toastr.min.js', function() {
 		console.log( 'jQuery ToastR plugin loaded' );
-		toastr.options.showMethod = 'slideDown';
-		toastr.options.hideMethod = 'slideUp';
-		toastr.options.timeOut = 3000;
+		toastr.options = {
+			"showMethod": 'slideDown',
+			"hideMethod": 'slideUp',
+			"positionClass": 'toast-bottom-right',
+			"timeOut": 3333
+		};
 		getScript( 'https://iredesigned.com/stuff/northshore/jquery-dateformat.min.js', function() {
 			console.log( 'Date format plugin loaded loaded' );
 			allScriptsLoaded = true;
