@@ -56,7 +56,7 @@ function injectStylesIntoIframes() {
 	}
 }
 
-function createEventObject( title, details, startTime, endTime, colorId ) {
+function createEventObject( title, details, startTime, endTime, colorId, isBusy ) {
 	return {
 		'summary': title,
 		'location': LOCATION,
@@ -73,7 +73,8 @@ function createEventObject( title, details, startTime, endTime, colorId ) {
 			'useDefault': false,
 			'overrides': []
 		},
-		'colorId': colorId
+		'colorId': colorId,
+		'transparency': isBusy === 'busy' ? 'opaque' : 'transparent'
 	};
 }
 
@@ -142,13 +143,12 @@ function syncEvents( range, events, calendarId, calendarName, isProcessFullTable
 			table += '<tr><td>' + col1 + '</td><td>' + col2 + '</td></tr>';
 		}
 
-		// table += '<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';
 		let updated = new Date();
 		table += '<tr><td colspan="2"><hr><small><i>Updated: ' + updated.toDateString() + ' at ' + updated.toLocaleTimeString() + '<br><small>' + APPNAME + '</small></i></small></td></tr>';
 		table += '</tbody></table>';
 
-		coworkerDays.push( createEventObject( 'Coworkers', table, startTime, endTime, 0 ) );
-		if ( date.note !== BLANK ) myWorkdays.push( createEventObject( date.note, table, startTime, endTime, colorId ) );
+		coworkerDays.push( createEventObject( 'Coworkers', table, startTime, endTime, 0, 'available' ) );
+		if ( date.note !== BLANK ) myWorkdays.push( createEventObject( date.note, table, startTime, endTime, colorId, 'busy' ) );
 
 	}
 	console.log( 'Traversed ' + i + ' workdays' );
@@ -350,7 +350,7 @@ function updateSigninStatus( GoogleAuth ) {
 		let fullName = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getName();
 		console.log( 'Client is authorized' );
 		toastr.clear();
-		status( 'Connected to calendar <strong>' + fullName + '</strong>' );
+		status( 'Connected to calendar <strong>' + fullName + '</strong><br>Use the buttons in the top right to perform operations' );
 		$currentUser.text( 'Calendar: ' + fullName );
 		$authorizeButton.hide();
 		$signoutButton.show();
@@ -386,7 +386,7 @@ function status( message, title ) {
 function deleteEvents( events, calendarId, calendarName, callback ) {
 
 	if ( events.length ) {
-		status( 'Clearing calendar of previously-created workdays' );
+		status( 'Clearing calendar "' + calendarName + '" of previously-created workdays' );
 		console.log( 'Clearing calendar "' + calendarName + '" of ' + events.length + ' out of ' + events.length + ' events...' );
 		deletionLoop( events.length );
 	} else {
