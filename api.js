@@ -59,7 +59,7 @@ function injectStylesIntoIframes() {
 function createEventObject( title, details, startTime, endTime, colorId, isBusy ) {
 	return {
 		'summary': title,
-		'location': LOCATION,
+		// 'location': LOCATION,
 		'description': details,
 		'start': {
 			'date': $.format.date( startTime, FORMAT ),
@@ -566,7 +566,7 @@ function runConnector() {
 			&& $sidebarWidgets.length > 5
 			&& $scheduleTable.length > 0 ) {
 			clearInterval( interval );
-			toastr.remove;
+			toastr.remove();
 			toastr.success( 'Schedule table loaded' );
 			createControls();
 			injectStylesIntoIframes();
