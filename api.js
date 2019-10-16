@@ -147,8 +147,8 @@ function syncEvents( range, events, calendarId, calendarName, isProcessFullTable
 		table += '<tr><td colspan="2"><hr><small><i>Updated: ' + updated.toDateString() + ' at ' + updated.toLocaleTimeString() + '<br><small>' + APPNAME + '</small></i></small></td></tr>';
 		table += '</tbody></table>';
 
-		coworkerDays.push( createEventObject( 'Coworkers', table, startTime, endTime, 0, 'available' ) );
 		if ( date.note !== BLANK ) myWorkdays.push( createEventObject( date.note, table, startTime, endTime, colorId, 'busy' ) );
+		else coworkerDays.push( createEventObject( 'Coworkers', table, startTime, endTime, 0, 'available' ) );
 
 	}
 	console.log( 'Traversed ' + i + ' workdays' );
