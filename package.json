@@ -1,0 +1,19 @@
+{
+  "name": "northshore-api-google-calendar-connector",
+  "version": "1.0.0",
+  "description": "Synchronizes NorthShore employee schedule from API to Google Calendar",
+  "main": "api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlixFlix/NorthShore-API-Google-Calendar-Connector.git"
+  },
+  "author": "Felix Stanek",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FlixFlix/NorthShore-API-Google-Calendar-Connector/issues"
+  },
+  "homepage": "https://github.com/FlixFlix/NorthShore-API-Google-Calendar-Connector#readme"
+}

@@ -15,6 +15,10 @@
 	flex: 1;
 }
 
+#api_controls button:disabled {
+	cursor: wait;
+}
+
 #api_controls button + button {
 	margin-left: 0
 }
@@ -155,7 +159,9 @@ button.toast-close-button {
 	font-size: 15px;
 	line-height: 1.5;
 	/*overrides*/
-	max-width: 40%;
+	max-width: 50%;
+	box-shadow: 0 0 12px #999;
+	border-radius: 3px 3px 3px 3px;
 }
 
 #toast-container * {
@@ -168,21 +174,15 @@ button.toast-close-button {
 	position: relative;
 	pointer-events: auto;
 	overflow: hidden;
-	margin: 0 0 6px;
-	padding: 15px 15px 15px 50px;
-	width: 400px;
-	-moz-border-radius: 3px 3px 3px 3px;
-	-webkit-border-radius: 3px 3px 3px 3px;
-	border-radius: 3px 3px 3px 3px;
-	background-position: 15px center;
+	margin:  0;
+	padding: 8px 12px 8px 40px;
+	width: 100%;
+	background-position: 15px 11px;
 	background-repeat: no-repeat;
-	-moz-box-shadow: 0 0 12px #999;
-	-webkit-box-shadow: 0 0 12px #999;
-	box-shadow: 0 0 12px #999;
+	background-size: 15px;
+	box-shadow: none;
 	color: #fff;
 	opacity: 1;
-	-ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
-	filter: alpha(opacity=80);
 }
 
 #toast-container > div.rtl {
